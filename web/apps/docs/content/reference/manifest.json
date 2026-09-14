@@ -3,7 +3,7 @@
     "package": "a2a-pack",
     "version": "0.1.116",
     "repo_path": "sdk/a2a-pack",
-    "tree_sha256": "bfce0f319db1751597059a71a961b29db771d59718bd6c08522ad26fd8f8ddc6"
+    "tree_sha256": "889461273b45ecc326a9e6e5842f892a52fc6ee95f551da9714dae2b125d9153"
   },
   "generated": [
     "agent",
