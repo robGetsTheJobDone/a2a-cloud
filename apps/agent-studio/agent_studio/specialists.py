@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import os
 import re
 from typing import Any
 
@@ -21,7 +22,20 @@ from .models import (
 from .platform import PlatformHelperClient, _owner_from_repo_url
 
 MAX_SMOKE_SKILLS = 3
-CODE_EDITOR_AGENT_TARGET = "https://code-editor-agent.a2acloud.io"
+
+
+def platform_domain() -> str:
+    """Domain hosted agents live under; ``A2A_PLATFORM_DOMAIN`` on the deployment."""
+    return os.environ.get("A2A_PLATFORM_DOMAIN", "example.com").strip()
+
+
+def code_editor_agent_target() -> str:
+    return (
+        os.environ.get("A2A_CODE_EDITOR_AGENT_URL")
+        or f"https://code-editor-agent.{platform_domain()}"
+    ).rstrip("/")
+
+
 BUILDER_HANDOFF_TIMEOUT_SECONDS = 3300.0
 BUILDER_WORKSPACE_TTL_SECONDS = 3540
 _JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")
@@ -37,13 +51,13 @@ class AgentStudioSpecialists:
         platform: PlatformHelperClient | None = None,
         builder_agent: str = "agent-builder",
         reviewer_agent: str = "agent-reviewer",
-        code_editor_agent: str = CODE_EDITOR_AGENT_TARGET,
+        code_editor_agent: str | None = None,
     ) -> None:
         self._ctx = ctx
         self._platform = platform or PlatformHelperClient.from_context(ctx)
         self._builder_agent = builder_agent
         self._reviewer_agent = reviewer_agent
-        self._code_editor_agent = code_editor_agent
+        self._code_editor_agent = code_editor_agent or code_editor_agent_target()
 
     async def build_agent(
         self,
@@ -1128,7 +1142,7 @@ async def _delegate_builder_workspace(ctx: Any, *, name: str, audience: str) -> 
     except Exception as exc:  # noqa: BLE001
         raise PermissionError(
             "agent-studio did not receive a workspace grant; invoke through "
-            "the a2acloud platform so it can delegate project write access "
+            "the platform so it can delegate project write access "
             "to agent-builder"
         ) from exc
     parent_grant = getattr(workspace, "current_grant", None)
@@ -1289,8 +1303,8 @@ def _smoke_target(*, name: str, live_state: dict[str, Any], ctx: Any) -> str:
     if isinstance(url, str) and url.startswith(("http://", "https://")):
         return url.rstrip("/")
     cp_url = str(getattr(ctx, "cp_url", "") or "")
-    if "a2acloud.io" in cp_url or "control-plane.control-plane.svc" in cp_url:
-        return f"https://{name}.a2acloud.io"
+    if platform_domain() in cp_url or "control-plane.control-plane.svc" in cp_url:
+        return f"https://{name}.{platform_domain()}"
     return name
 
 

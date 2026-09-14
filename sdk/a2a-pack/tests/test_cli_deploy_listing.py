@@ -5,7 +5,7 @@ writes onto the agent row on every upload, and that field defaults to True. So
 the CLI decides the listing, and the two ways to get it wrong are symmetric:
 
 - assume "public" when a2a.yaml says nothing, and a practice agent lands in the
-  public registry at a2acloud.io;
+  platform public registry;
 - assume "private" when a2a.yaml says nothing, and a redeploy silently unlists
   an agent someone published on purpose.
 
@@ -113,7 +113,7 @@ def test_expose_public_true_lists_the_agent(tmp_path, monkeypatch, _logged_in):
     # A declared value is the answer; no need to ask the control plane.
     assert client.get_calls == []
     flat = _flat(result.output)
-    assert "listed in the public registry at a2acloud.io" in flat
+    assert "listed in the public registry at " in flat
     assert "expose.public: true" in flat
 
 
@@ -167,7 +167,7 @@ def test_absent_expose_keeps_an_already_listed_agent_listed(
     assert client.tarball_kwargs["public"] is True
     assert client.get_calls == ["demo"]
     flat = _flat(result.output)
-    assert "listed in the public registry at a2acloud.io" in flat
+    assert "listed in the public registry at " in flat
     assert "kept the listing the agent already had" in flat
 
 
@@ -599,7 +599,7 @@ def test_local_deploy_states_its_listing_outcome(monkeypatch, _logged_in, tmp_pa
 
     assert result.exit_code == 0, result.output
     flat = _flat(result.output)
-    assert "listed in the public registry at a2acloud.io" in flat
+    assert "listed in the public registry at " in flat
     assert "kept the listing the agent already had" in flat
     assert "a2a local-deploy --private" in flat
 

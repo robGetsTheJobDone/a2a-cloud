@@ -1,3 +1,15 @@
+import {
+  adminHost,
+  apiUrl,
+  argocdUrl,
+  dashboardUrl,
+  giteaUrl,
+  grafanaUrl,
+  ingressHostTemplate,
+  platformDomain,
+  registryHost,
+} from "./platform";
+
 export type AdminLink = {
   label: string;
   href: string;
@@ -76,8 +88,8 @@ export const sections: Record<string, AdminSection> = {
       },
     ],
     links: [
-      { label: "Control plane", href: "https://api.a2acloud.io/docs" },
-      { label: "Gitea", href: "https://gitea.a2acloud.io/gitea_admin" },
+      { label: "Control plane", href: `${apiUrl()}/docs` },
+      { label: "Gitea", href: `${giteaUrl()}/gitea_admin` },
     ],
   },
   agents: {
@@ -89,8 +101,8 @@ export const sections: Record<string, AdminSection> = {
     metrics: [
       { label: "Managed repos", value: "Gitea", tone: "cyan" },
       { label: "Runtime namespace", value: "agents" },
-      { label: "Image registry", value: "registry.a2acloud.io" },
-      { label: "Ingress template", value: "{name}.a2acloud.io" },
+      { label: "Image registry", value: registryHost() },
+      { label: "Ingress template", value: ingressHostTemplate() },
     ],
     work: [
       {
@@ -116,9 +128,9 @@ export const sections: Record<string, AdminSection> = {
       },
     ],
     links: [
-      { label: "My agents", href: "https://app.a2acloud.io/my-agents" },
-      { label: "Gitea", href: "https://gitea.a2acloud.io/gitea_admin" },
-      { label: "Registry", href: "https://registry.a2acloud.io" },
+      { label: "My agents", href: `${dashboardUrl()}/my-agents` },
+      { label: "Gitea", href: `${giteaUrl()}/gitea_admin` },
+      { label: "Registry", href: `https://${registryHost()}` },
     ],
   },
   deployments: {
@@ -152,14 +164,14 @@ export const sections: Record<string, AdminSection> = {
         title: "Verify certificates",
         owner: "cert-manager",
         state: "Watch",
-        detail: "TLS issuance and renewal for a2acloud.io hosts.",
+        detail: `TLS issuance and renewal for ${platformDomain()} hosts.`,
         tone: "amber",
       },
     ],
     links: [
-      { label: "Argo CD", href: "https://argocd.a2acloud.io" },
-      { label: "Gitea Actions", href: "https://gitea.a2acloud.io/gitea_admin" },
-      { label: "Grafana", href: "https://grafana.a2acloud.io" },
+      { label: "Argo CD", href: argocdUrl() },
+      { label: "Gitea Actions", href: `${giteaUrl()}/gitea_admin` },
+      { label: "Grafana", href: grafanaUrl() },
     ],
   },
   organizations: {
@@ -198,8 +210,8 @@ export const sections: Record<string, AdminSection> = {
       },
     ],
     links: [
-      { label: "Organization", href: "https://app.a2acloud.io/organization" },
-      { label: "Control API", href: "https://api.a2acloud.io/docs" },
+      { label: "Organization", href: `${dashboardUrl()}/organization` },
+      { label: "Control API", href: `${apiUrl()}/docs` },
     ],
   },
   secrets: {
@@ -238,8 +250,8 @@ export const sections: Record<string, AdminSection> = {
       },
     ],
     links: [
-      { label: "LLM keys", href: "https://app.a2acloud.io/keys" },
-      { label: "Gitea", href: "https://gitea.a2acloud.io" },
+      { label: "LLM keys", href: `${dashboardUrl()}/keys` },
+      { label: "Gitea", href: giteaUrl() },
     ],
   },
   audit: {
@@ -278,8 +290,8 @@ export const sections: Record<string, AdminSection> = {
       },
     ],
     links: [
-      { label: "Control room", href: "https://app.a2acloud.io/control-room" },
-      { label: "Activity", href: "https://app.a2acloud.io/activity" },
+      { label: "Control room", href: `${dashboardUrl()}/control-room` },
+      { label: "Activity", href: `${dashboardUrl()}/activity` },
     ],
   },
 };
@@ -288,5 +300,5 @@ export const overviewMetrics: AdminMetric[] = [
   { label: "Admin app", value: "Next.js", tone: "green" },
   { label: "Auth boundary", value: "Separate", tone: "cyan" },
   { label: "Git source", value: "apps/admin" },
-  { label: "Host", value: "admin.a2acloud.io" },
+  { label: "Host", value: adminHost() },
 ];

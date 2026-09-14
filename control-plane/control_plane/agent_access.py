@@ -81,7 +81,7 @@ def byok_required_payload(
     policy: AccountAccessPolicy,
     used: int,
 ) -> dict[str, Any]:
-    dashboard = str(settings.dashboard_url or "https://app.a2acloud.io").rstrip("/")
+    dashboard = str(settings.dashboard_url).rstrip("/")
     return {
         "error": "llm_credentials_required",
         "reason": "platform_trial_exhausted",

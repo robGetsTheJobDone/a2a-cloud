@@ -73,10 +73,10 @@ async def _seed_agent(
             name=name,
             description="Invoice bot",
             version="0.1.0",
-            image=f"registry.a2acloud.io/agents/{name}:latest",
+            image=f"registry.example.com/agents/{name}:latest",
             public=True,
             status="running",
-            url=f"https://{name}.a2acloud.io",
+            url=f"https://{name}.example.com",
             card={},
             gitea_owner=owner,
         )
@@ -105,8 +105,8 @@ async def _seed_deployment(
             status=status,
             source_repo_url=f"https://gitea.example/{agent.gitea_owner}/{agent.name}",
             head_sha=head_sha,
-            image=image or f"registry.a2acloud.io/agents/{agent.name}:latest",
-            agent_url=f"https://{agent.name}.a2acloud.io",
+            image=image or f"registry.example.com/agents/{agent.name}:latest",
+            agent_url=f"https://{agent.name}.example.com",
         )
         session.add(deploy)
         await session.commit()
@@ -227,7 +227,7 @@ async def test_source_push_ignores_non_main_runtime_delete_platform_only_and_unk
             "platform_only_changes",
         ),
         (_payload(commit_email="platform@a2a.local"), "platform_source_edit_push"),
-        (_payload(commit_email="noreply@a2acloud.io"), "platform_source_edit_push"),
+        (_payload(commit_email="noreply@example.com"), "platform_source_edit_push"),
         (_payload(commit_message="a2a-source-edit: write agent.py"), "platform_source_edit_push"),
         (_payload(pusher_username="meta-agent-writer"), "platform_source_edit_push"),
         (_payload(repo="missing-bot"), "unknown_repo"),
@@ -327,7 +327,7 @@ async def test_runtime_push_requests_argo_refresh_and_records_events(
     assert [event.stage for event in events] == ["runtime", "argo"]
     assert events[0].data["runtime_head_sha"] == "b" * 40
     assert events[0].data["expected_image"] == (
-        "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40
+        "registry.example.com/agents/invoice-bot:" + "a" * 40
     )
     assert events[1].data["expected_revision"] == "b" * 40
     assert events[1].data["refresh"] == {"requested": True, "mode": "hard"}
@@ -346,7 +346,7 @@ async def test_runtime_push_preserves_runtime_upgrade_expected_image(
         trigger="runtime_upgrade",
     )
     expected_image = (
-        "registry.a2acloud.io/agents/invoice-bot:"
+        "registry.example.com/agents/invoice-bot:"
         + "a" * 40
         + "-runtime-0.1.57-testnonce"
     )
@@ -375,7 +375,7 @@ async def test_runtime_push_preserves_runtime_upgrade_expected_image(
         _payload(
             repo="invoice-bot-runtime",
             after="d" * 40,
-            paths=[".a2acloud/runtime-upgrade.json"],
+            paths=[".a2a-platform/runtime-upgrade.json"],
         ),
         path="/v1/platform/gitea/webhooks/runtime-push",
     )

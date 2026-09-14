@@ -20,7 +20,7 @@ from .config import settings
 
 log = logging.getLogger(__name__)
 
-GITEA_PUBLIC = os.environ.get("A2A_CP_GITEA_PUBLIC", "http://gitea.a2acloud.io")
+GITEA_PUBLIC = os.environ.get("A2A_CP_GITEA_PUBLIC", f"https://gitea.{settings.platform_domain}")
 GITEA_INTERNAL = os.environ.get(
     "A2A_CP_GITEA_INTERNAL",
     "http://gitea-http.gitea.svc.cluster.local:3000",
@@ -29,7 +29,7 @@ GITEA_USER = os.environ.get("A2A_CP_GITEA_USER", "gitea_admin")
 GITEA_PASS = os.environ.get("A2A_CP_GITEA_PASS", "gitea_admin")
 GITEA_REPO_DESCRIPTION_MAX = 255
 
-_PLATFORM_SOURCE_PREFIXES = ("deploy/", ".gitea/", ".a2acloud/", ".git/")
+_PLATFORM_SOURCE_PREFIXES = ("deploy/", ".gitea/", ".a2a-platform/", ".git/")
 _PLATFORM_SOURCE_FILES = {"Dockerfile", ".dockerignore", ".a2a-builder-state.json"}
 _RUNTIME_REPO_SUFFIX = "-runtime"
 _GITEA_USERNAME_RE = re.compile(r"[^a-z0-9-]+")

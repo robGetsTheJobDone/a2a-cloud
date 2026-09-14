@@ -120,7 +120,7 @@ def test_name_validator_rejects_every_reserved_name(name: str) -> None:
 def test_deploy_agent_refuses_to_apply_manifests_for_a_reserved_name(name: str) -> None:
     """The k8s layer is the backstop: it never renders over platform objects."""
     with pytest.raises(ValueError, match="reserved for platform infrastructure"):
-        deploy_agent(name, "registry.a2acloud.io/agents/x:latest", True, {})
+        deploy_agent(name, "registry.example.com/agents/x:latest", True, {})
 
 
 # --------------------------------------------------------------------------

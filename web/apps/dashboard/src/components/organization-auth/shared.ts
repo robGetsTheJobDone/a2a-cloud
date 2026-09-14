@@ -8,11 +8,15 @@ import {
 } from "../../api";
 import { type StatusBadgeTone } from "../DashboardChrome";
 import { type OrganizationViewId } from "../../navigation";
+import { authUrl, keycloakRealm } from "../../lib/platform";
 
-export const KEYCLOAK_ACCOUNT_URL =
-  "https://auth.a2acloud.io/realms/a2acloud/account/";
-export const KEYCLOAK_ADMIN_URL =
-  "https://auth.a2acloud.io/admin/a2acloud/console/";
+export function keycloakAccountUrl(): string {
+  return authUrl(`realms/${keycloakRealm()}/account/`);
+}
+
+export function keycloakAdminUrl(): string {
+  return authUrl(`admin/${keycloakRealm()}/console/`);
+}
 
 export type OrganizationDetails = {
   domains: OrganizationDomain[];

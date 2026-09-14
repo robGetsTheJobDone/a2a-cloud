@@ -40,7 +40,7 @@ def test_production_session_cookie_is_host_prefixed_and_host_only(monkeypatch) -
     assert "domain=" not in current.lower()
     assert any(
         value.startswith("a2a_session=")
-        and "domain=.a2acloud.io" in value.lower()
+        and "domain=.example.com" in value.lower()
         and "max-age=0" in value.lower()
         for value in cookies
     )
@@ -53,7 +53,7 @@ async def _client(
 ) -> tuple[AsyncClient, Any]:
     monkeypatch.setattr(settings, "dashboard_url", "http://test")
     monkeypatch.setattr(settings, "keycloak_issuer", "https://auth.example/realms/a2a")
-    monkeypatch.setattr(settings, "keycloak_browser_client_id", "a2acloud-dashboard")
+    monkeypatch.setattr(settings, "keycloak_browser_client_id", "a2a-dashboard")
     monkeypatch.setattr(settings, "jwt_secret", "test-secret")
     monkeypatch.setattr(settings, "session_cookie_secure", False)
 
@@ -154,7 +154,7 @@ async def test_cli_session_uses_single_use_exchange_code(monkeypatch) -> None:
         assert confirmed.headers["cache-control"] == "no-store"
         assert confirmed.headers["referrer-policy"] == "no-referrer"
         confirmed_cookies = confirmed.headers.get_list("set-cookie")
-        assert any("domain=.a2acloud.io" in value.lower() for value in confirmed_cookies)
+        assert any("domain=.example.com" in value.lower() for value in confirmed_cookies)
         assert any(
             settings.session_cookie_name in value
             and "max-age=0" not in value.lower()
@@ -286,13 +286,13 @@ async def test_oidc_callback_sets_cookie_session_and_me_uses_it(monkeypatch) -> 
         assert start.status_code == 303
         location = start.headers["location"]
         query = parse_qs(urlsplit(location).query)
-        assert query["client_id"] == ["a2acloud-dashboard"]
+        assert query["client_id"] == ["a2a-dashboard"]
         assert query["redirect_uri"] == ["http://test/v1/auth/oidc/callback"]
         assert query["response_type"] == ["code"]
         assert query["code_challenge_method"] == ["S256"]
         assert query["login_hint"] == ["Dev@Example.com"]
         start_cookies = start.headers.get_list("set-cookie")
-        assert any("domain=.a2acloud.io" in value.lower() for value in start_cookies)
+        assert any("domain=.example.com" in value.lower() for value in start_cookies)
         assert any(
             settings.oidc_state_cookie_name in value
             and "max-age=0" not in value.lower()
@@ -316,7 +316,7 @@ async def test_oidc_callback_sets_cookie_session_and_me_uses_it(monkeypatch) -> 
 
         def fake_verify_keycloak_id_token(token: str, *, audience: str) -> dict:
             assert token == "id-token-123"
-            assert audience == "a2acloud-dashboard"
+            assert audience == "a2a-dashboard"
             return {
                 "sub": "kc-user-123",
                 "email": "Dev@Example.com",
@@ -364,7 +364,7 @@ async def test_oidc_callback_sets_cookie_session_and_me_uses_it(monkeypatch) -> 
             "user": None,
             "logout_url": (
                 "https://auth.example/realms/a2a/protocol/openid-connect/logout"
-                "?client_id=a2acloud-dashboard"
+                "?client_id=a2a-dashboard"
                 "&post_logout_redirect_uri=http%3A%2F%2Ftest%2Fworkspace"
             ),
         }

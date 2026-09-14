@@ -181,7 +181,7 @@ GODADDY_DOMAINS_MINIMAL = {
 BLOG_AUTH_ALTERNATIVES_MINIMAL = {
     "openapi": "3.1.0",
     "info": {"title": "a2a cloud blog API", "version": "0.1.0"},
-    "servers": [{"url": "https://blog.a2acloud.io"}],
+    "servers": [{"url": "https://blog.example.com"}],
     "components": {
         "securitySchemes": {
             "bearerAuth": {
@@ -242,7 +242,7 @@ DISTINCT_AUTH_ALTERNATIVES_MINIMAL = {
 OPENPANEL_ADMIN_MINIMAL = {
     "openapi": "3.1.0",
     "info": {"title": "OpenPanel Admin", "version": "1.0.0"},
-    "servers": [{"url": "https://analytics.a2acloud.io/api"}],
+    "servers": [{"url": "https://analytics.example.com/api"}],
     "paths": {
         "/manage/projects": {
             "get": {
@@ -257,7 +257,7 @@ OPENPANEL_ADMIN_MINIMAL = {
 OPENPANEL_PROJECT_MINIMAL = {
     "openapi": "3.1.0",
     "info": {"title": "OpenPanel Project", "version": "1.0.0"},
-    "servers": [{"url": "https://analytics.a2acloud.io/api"}],
+    "servers": [{"url": "https://analytics.example.com/api"}],
     "paths": {
         "/events": {
             "post": {
@@ -590,8 +590,8 @@ def test_build_openapi_agent_source_does_not_require_distinct_or_auth_schemes(
 def test_build_openapi_agent_source_namespaces_composite_auth_by_source_url(
     monkeypatch,
 ) -> None:
-    admin_url = "https://analytics.a2acloud.io/api/documentation/admin.json"
-    project_url = "https://analytics.a2acloud.io/api/documentation/project.json"
+    admin_url = "https://analytics.example.com/api/documentation/admin.json"
+    project_url = "https://analytics.example.com/api/documentation/project.json"
     generated = build_openapi_agent_source(
         [OPENPANEL_ADMIN_MINIMAL, OPENPANEL_PROJECT_MINIMAL],
         name="openpanel",
@@ -601,7 +601,7 @@ def test_build_openapi_agent_source_namespaces_composite_auth_by_source_url(
     assert generated.preview["composite"] is True
     assert generated.preview["source_openapi_url"] is None
     assert generated.preview["source_openapi_urls"] == [admin_url, project_url]
-    assert generated.preview["server_urls"] == ["https://analytics.a2acloud.io/api"]
+    assert generated.preview["server_urls"] == ["https://analytics.example.com/api"]
     assert generated.preview["operation_count"] == 2
     compile(generated.files["agent.py"], "agent.py", "exec")
     monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2] / "a2a"))
@@ -815,8 +815,8 @@ async def test_preview_openapi_agent_route_uses_generator(monkeypatch) -> None:
 
 
 async def test_preview_openapi_agent_route_accepts_multiple_urls(monkeypatch) -> None:
-    admin_url = "https://analytics.a2acloud.io/api/documentation/admin.json"
-    project_url = "https://analytics.a2acloud.io/api/documentation/project.json"
+    admin_url = "https://analytics.example.com/api/documentation/admin.json"
+    project_url = "https://analytics.example.com/api/documentation/project.json"
     fetched: list[str] = []
 
     async def fake_fetch(url: str):

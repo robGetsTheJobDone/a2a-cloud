@@ -800,7 +800,7 @@ def _openapi_source_urls_from_card(agent: Agent) -> list[str]:
     default_base_url = openapi_auto.get("default_base_url")
     if isinstance(default_base_url, str):
         parsed = urlparse(default_base_url.strip())
-        if parsed.scheme in {"http", "https"} and parsed.netloc.endswith(".a2acloud.io"):
+        if parsed.scheme in {"http", "https"} and parsed.netloc.endswith(settings.platform_host_suffix):
             path = parsed.path.rstrip("/") + "/openapi.json"
             return [urlunparse((parsed.scheme, parsed.netloc, path, "", "", ""))]
     return []
@@ -836,7 +836,7 @@ _AGENT_API_RUN_KIND = "agent_api_invoke"
 # Use an immutable image tag here. Sandbox runtimes can cache ``latest`` long
 # enough to keep using an older base image after the registry tag moves.
 _COMPOSE_VALIDATION_DEFAULT_IMAGE = (
-    f"registry.a2acloud.io/{settings.a2a_pack_image_repo}:0.1.92"
+    f"{settings.base_image_repo}:0.1.92"
 )
 
 
@@ -1041,7 +1041,7 @@ def _normalize_custom_hostname(raw_hostname: str) -> str:
         raise HTTPException(400, "hostname contains an invalid DNS label")
     platform_suffix = _platform_host_suffix()
     if value == platform_suffix or value.endswith("." + platform_suffix):
-        raise HTTPException(400, "use the default a2acloud.io URL directly")
+        raise HTTPException(400, f"use the default {settings.platform_domain} URL directly")
     return value
 
 
@@ -5332,7 +5332,7 @@ async def from_source(
     agent.gitea_owner = repo_owner
     agent.description = body.description
     agent.version = body.version
-    agent.image = f"registry.a2acloud.io/agents/{body.name}:latest"
+    agent.image = settings.agent_image(body.name, "latest")
     agent.public = body.public
     agent.card = {}  # filled in once first build registers card
     agent.status = "provisioning"
@@ -5996,7 +5996,7 @@ async def from_openapi(
     agent.gitea_owner = repo_owner
     agent.description = _truncate(generated.description, AGENT_DESCRIPTION_MAX)
     agent.version = generated.version
-    agent.image = f"registry.a2acloud.io/agents/{generated.name}:latest"
+    agent.image = settings.agent_image(generated.name, "latest")
     agent.public = body.public
     agent.card = {}
     agent.status = "building"
@@ -6056,7 +6056,7 @@ async def from_openapi(
         data={
             "repo_url": runtime_internal_url,
             "expected_revision": runtime_sha,
-            "expected_image": f"registry.a2acloud.io/agents/{agent.name}:{sha}",
+            "expected_image": settings.agent_image(agent.name, sha),
         },
     )
     return AgentFromOpenAPIOut(
@@ -6142,7 +6142,7 @@ async def compose_agent(
     agent.gitea_owner = repo_owner
     agent.description = _truncate(generated.description, AGENT_DESCRIPTION_MAX)
     agent.version = generated.version
-    agent.image = f"registry.a2acloud.io/agents/{generated.name}:latest"
+    agent.image = settings.agent_image(generated.name, "latest")
     agent.public = body.public
     agent.card = validation["card"] if isinstance(validation.get("card"), dict) else {}
     agent.status = "building"
@@ -6213,7 +6213,7 @@ async def compose_agent(
         data={
             "repo_url": runtime_internal_url,
             "expected_revision": runtime_sha,
-            "expected_image": f"registry.a2acloud.io/agents/{agent.name}:{sha}",
+            "expected_image": settings.agent_image(agent.name, sha),
         },
     )
     return AgentFromComposeOut(
@@ -6374,7 +6374,7 @@ async def from_tarball(
     agent.gitea_owner = repo_owner
     agent.description = description
     agent.version = version
-    agent.image = f"registry.a2acloud.io/agents/{name}:latest"
+    agent.image = settings.agent_image(name, "latest")
     agent.public = public
     agent.card = card
     agent.status = "building"
@@ -6481,7 +6481,7 @@ async def from_tarball(
             "url": expected_url,
             "repo_url": runtime_internal_url,
             "expected_revision": runtime_sha,
-            "expected_image": f"registry.a2acloud.io/agents/{agent.name}:{sha}",
+            "expected_image": settings.agent_image(agent.name, sha),
             "gitops_wired": bool(runtime_gitops_wired),
             "availability": availability,
         },
@@ -8235,7 +8235,7 @@ async def upgrade_agent_runtime(
         if not source_sha:
             raise RuntimeError("source repo is missing main branch")
         image_tag = runtime_upgrade_image_tag(source_sha, status["latest_version"])
-        expected_image = f"registry.a2acloud.io/agents/{agent.name}:{image_tag}"
+        expected_image = settings.agent_image(agent.name, image_tag)
         deployment.head_sha = source_sha
         deployment.image = expected_image
         await record_deployment_event(

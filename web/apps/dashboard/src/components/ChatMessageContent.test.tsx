@@ -12,11 +12,11 @@ describe("workspace file reference extraction", () => {
       "Latest message:",
       "",
       "From: Ada Example `ada@example.com`",
-      "To: `robert@a2acloud.io`",
+      "To: `robert@example.com`",
       "Mailu mailboxes found:",
       "",
-      "`postmaster@a2acloud.io`",
-      "`robert@a2acloud.io`",
+      "`postmaster@example.com`",
+      "`robert@example.com`",
     ].join("\n");
 
     expect(extractChatWorkspaceFileRefs(content)).toEqual([]);

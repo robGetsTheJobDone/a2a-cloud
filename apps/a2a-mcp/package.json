@@ -1,7 +1,7 @@
 {
   "name": "a2amcp",
   "version": "0.1.11",
-  "description": "MCP gateway for a2acloud agents. Run as a local MCP server; expose any number of deployed A2A agents to Claude Code, Cursor, and other MCP clients.",
+  "description": "MCP gateway for A2A Cloud agents. Run as a local MCP server; expose any number of deployed A2A agents to Claude Code, Cursor, and other MCP clients.",
   "type": "module",
   "bin": {
     "a2amcp": "dist/cli.js",

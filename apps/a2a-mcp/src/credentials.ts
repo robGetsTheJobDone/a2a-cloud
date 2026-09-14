@@ -7,7 +7,20 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-export const DEFAULT_API_URL = "https://api.a2acloud.io";
+/**
+ * The hosted a2a cloud instance. This is the ONLY place the vendor domain
+ * appears: `npx a2amcp` with no configuration talks to the hosted service.
+ * Self-hosters set `A2A_PLATFORM_DOMAIN` (or `A2A_API_URL` directly).
+ */
+export const HOSTED_PLATFORM_DOMAIN = "a2acloud.io";
+
+export function platformDomain(): string {
+  return (process.env.A2A_PLATFORM_DOMAIN || HOSTED_PLATFORM_DOMAIN).trim();
+}
+
+export const DEFAULT_API_URL = (
+  process.env.A2A_API_URL || `https://api.${platformDomain()}`
+).replace(/\/+$/, "");
 
 export interface Credentials {
   apiUrl: string;

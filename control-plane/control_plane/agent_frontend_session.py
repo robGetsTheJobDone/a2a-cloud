@@ -1,6 +1,6 @@
 """Origin-bound browser sessions for hosted agent frontends.
 
-Hosted agents live on user-controlled ``<name>.a2acloud.io`` origins, so they
+Hosted agents live on user-controlled ``<name>.<platform_domain>`` origins, so they
 must never see the dashboard's ``__Host-`` platform session cookie: agent code
 could read it and act as the user across the whole platform. That is why
 ``settings.allow_platform_frontend_auth`` stayed off and packed UIs could

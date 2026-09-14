@@ -5,8 +5,8 @@ import { OrganizationDetailView } from "./organization-auth/OrganizationDetail";
 import { OrganizationList } from "./organization-auth/OrganizationList";
 import { OrganizationPosture } from "./organization-auth/OrganizationPosture";
 import {
-  KEYCLOAK_ACCOUNT_URL,
-  KEYCLOAK_ADMIN_URL,
+  keycloakAccountUrl,
+  keycloakAdminUrl,
 } from "./organization-auth/shared";
 import { useOrgAuthData } from "./organization-auth/useOrgAuthData";
 
@@ -62,10 +62,10 @@ export function OrganizationAuth() {
       routeId="organization"
       actions={
         <div className="flex flex-wrap gap-2">
-          <ExternalButton href={KEYCLOAK_ACCOUNT_URL} icon="user">
+          <ExternalButton href={keycloakAccountUrl()} icon="user">
             Account settings
           </ExternalButton>
-          <ExternalButton href={KEYCLOAK_ADMIN_URL} icon="shield">
+          <ExternalButton href={keycloakAdminUrl()} icon="shield">
             Keycloak console
           </ExternalButton>
         </div>

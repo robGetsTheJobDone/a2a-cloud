@@ -52,7 +52,8 @@ from .local import (
     load_local_project,
     run_preflight_sync,
 )
-from .manifests import INGRESS_HOST_TEMPLATE, NAMESPACE, render_manifests
+from . import platform
+from .manifests import NAMESPACE, render_manifests
 
 app = typer.Typer(
     add_completion=False,
@@ -81,7 +82,6 @@ app.add_typer(openapi_app, name="openapi")
 app.add_typer(receipt_app, name="receipt")
 console = Console()
 
-DEFAULT_REGISTRY_HOST = "registry.a2acloud.io"
 DEFAULT_AGENT_BASE_IMAGE = "python:3.11-slim"
 SDK_PYPI_PACKAGE = "a2a_pack"
 PETSTORE_OPENAPI_URL = "https://petstore3.swagger.io/api/v3/openapi.json"
@@ -839,7 +839,7 @@ def generate_openapi(
         None,
         "--public/--private",
         help=(
-            "List the generated agent in the public registry at a2acloud.io. "
+            "List the generated agent in the platform's public registry. "
             "Generated agents start unlisted."
         ),
     ),
@@ -2400,12 +2400,16 @@ def _stage_build_context(project: Path, dst: Path) -> None:
 @app.command()
 def build(
     project: Path = typer.Option(Path("."), "--project", "-p"),
-    registry: str = typer.Option(DEFAULT_REGISTRY_HOST, "--registry"),
+    registry: str | None = typer.Option(
+        None, "--registry", help="Image registry host (default: registry.<platform domain>)"
+    ),
     push: bool = typer.Option(False, "--push", help="Also push the built image"),
 ) -> None:
     """Build (and optionally push) the container image for the agent."""
     cfg = _read_yaml(project / "a2a.yaml")
-    image = _resolve_image_ref(cfg["name"], cfg["version"], project, registry)
+    image = _resolve_image_ref(
+        cfg["name"], cfg["version"], project, registry or platform.registry_host()
+    )
 
     with tempfile.TemporaryDirectory(prefix="a2a-build-") as tmp:
         ctx = Path(tmp)
@@ -2893,7 +2897,7 @@ def logs(
 
 # --- registry listing -------------------------------------------------------
 #
-# Whether a deploy lists the agent in the public registry at a2acloud.io has
+# Whether a deploy lists the agent in the platform's public registry has
 # three possible inputs, in precedence order:
 #
 #   1. ``a2a deploy --public`` / ``--private``: an explicit choice for this run.
@@ -3059,14 +3063,14 @@ def _print_listing_outcome(
     suffix = f" ({_listing_why(is_public, why)})"
     if is_public:
         console.print(
-            f"[bold]listing:[/] listed in the public registry at a2acloud.io"
+            f"[bold]listing:[/] listed in the public registry at {platform.platform_domain()}"
             f"{suffix}. To unlist it, set `expose.public: false` in a2a.yaml or "
             f"run `{unlist_cmd}`."
         )
         return
     console.print(
         f"[bold]listing:[/] unlisted — kept out of the public registry at "
-        f"a2acloud.io{suffix}. This is a listing choice, not access control — "
+        f"{platform.platform_domain()}{suffix}. This is a listing choice, not access control — "
         "the agent still gets its canonical URL, and who may call it is decided "
         "by its auth model. To list it, set `expose.public: true` in a2a.yaml or "
         f"run `{list_cmd}`."
@@ -3087,7 +3091,7 @@ def deploy(
         None,
         "--public/--private",
         help=(
-            "List/unlist the agent in the public registry at a2acloud.io. "
+            "List/unlist the agent in the platform's public registry. "
             "Defaults to `expose.public` from a2a.yaml; with no such key the "
             "agent keeps its current listing, and a brand-new agent is unlisted."
         ),

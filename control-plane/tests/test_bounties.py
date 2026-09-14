@@ -107,7 +107,7 @@ async def test_serialize_includes_claimed_agent_public_proof() -> None:
         image="registry/invoice-bot:latest",
         public=True,
         status="running",
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={"skills": [{"name": "extract_invoice"}], "tools_used": ["ocr"]},
     )
     bounty = Bounty(
@@ -130,7 +130,7 @@ async def test_serialize_includes_claimed_agent_public_proof() -> None:
 
     assert out.claimed_agent_name == "invoice-bot"
     assert out.claimed_agent_status == "running"
-    assert out.claimed_agent_url == "https://invoice-bot.a2acloud.io"
+    assert out.claimed_agent_url == "https://invoice-bot.example.com"
     assert out.claimed_agent_version == "1.2.3"
     assert out.claimed_agent_card == {
         "skills": [{"name": "extract_invoice"}],
@@ -172,7 +172,7 @@ async def test_list_bounties_batches_related_metadata() -> None:
                 image="registry/invoice-bot:latest",
                 public=True,
                 status="running",
-                url="https://invoice-bot.a2acloud.io",
+                url="https://invoice-bot.example.com",
                 card={"skills": [{"name": "extract_invoice"}]},
             )
             session.add(agent)

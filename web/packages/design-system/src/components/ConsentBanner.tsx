@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Shared consent contract across every *.a2acloud.io surface. The cookie is set
+// Shared consent contract across every platform surface. The cookie is set
 // on the registrable domain so a decision on one site (landing/docs)
 // carries to the others. The same cookie name is read by the PostHog loader
 // (@a2a/analytics posthog.ts) as a second, independent gate.
@@ -66,7 +66,7 @@ export function openConsentPreferences() {
 }
 
 export function ConsentBanner({
-  policyHref = "https://a2acloud.io/privacy",
+  policyHref = "/privacy",
 }: {
   policyHref?: string;
 }) {

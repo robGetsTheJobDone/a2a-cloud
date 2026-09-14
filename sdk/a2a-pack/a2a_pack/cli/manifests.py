@@ -1,7 +1,7 @@
 """Generate Kubernetes manifests for a deployed agent.
 
-Targets the existing local cluster: namespace ``agents``, registry at
-``registry.a2acloud.io``, traefik ingress at ``<name>.a2acloud.io``.
+Targets a plain Kubernetes cluster: namespace ``agents``, ingress host
+``<name>.<platform domain>`` (see ``a2a_pack.cli.platform``).
 """
 from __future__ import annotations
 
@@ -10,9 +10,13 @@ from typing import Any
 import yaml
 
 from ..agent import A2AAgent
+from . import platform
 
 NAMESPACE = "agents"
-INGRESS_HOST_TEMPLATE = "{name}.a2acloud.io"
+
+
+def ingress_host(name: str) -> str:
+    return f"{name}.{platform.platform_domain()}"
 
 
 def render_manifests(
@@ -149,7 +153,7 @@ def render_manifests(
                 "spec": {
                     "rules": [
                         {
-                            "host": INGRESS_HOST_TEMPLATE.format(name=name),
+                            "host": ingress_host(name),
                             "http": {
                                 "paths": [
                                     {

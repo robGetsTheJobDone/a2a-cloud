@@ -12,7 +12,7 @@ their own workflows.
   `~/.a2a/credentials.json`, enabled-agent config in `~/.a2a/mcp.json`, talks to
   the control plane, and is distinct from hosted `/mcp` and `/connector-mcp`
   endpoints.
-- `admin`: Next.js admin console for `admin.a2acloud.io`. Auth is Keycloak OIDC
+- `admin`: Next.js admin console (`admin.<platform-domain>`). Auth is Keycloak OIDC
   plus server-side control-plane verification; admin API calls are proxied with
   `A2A_CP_ADMIN_TOKEN` so the token never reaches the browser.
 - `agent-builder`: Python `a2a-pack` meta-agent that uses DeepAgents/LangGraph
@@ -82,8 +82,8 @@ their own workflows.
 
 ## Testing and Deployment
 
-- `apps/e2e` defaults to `https://api.a2acloud.io`. Set
-  `A2A_E2E_API_URL=http://api.127-0-0-1.nip.io` for local clusters. Use
+- `apps/e2e` targets `A2A_E2E_API_URL` (or `A2A_API_URL`), default
+  `http://127.0.0.1:8000`. Use
   `-m "not slow"` to skip the chart-render flow.
 - Python unit tests live beside the agents/services under `tests/`; common
   commands are `python -m pytest` after installing the package and deps.

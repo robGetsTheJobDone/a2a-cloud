@@ -55,10 +55,10 @@ async def db_session():
             name="private-research",
             description="Private research helper",
             version="1.0.0",
-            image="registry.a2acloud.io/agents/private-research:latest",
+            image="registry.example.com/agents/private-research:latest",
             public=False,
             status="running",
-            url="https://private-research.a2acloud.io",
+            url="https://private-research.example.com",
             card={"skills": [{"name": "search"}]},
         )
         public_agent = Agent(
@@ -66,10 +66,10 @@ async def db_session():
             name="public-research",
             description="Public research helper",
             version="1.0.0",
-            image="registry.a2acloud.io/agents/public-research:latest",
+            image="registry.example.com/agents/public-research:latest",
             public=True,
             status="running",
-            url="https://public-research.a2acloud.io",
+            url="https://public-research.example.com",
             card={"skills": [{"name": "search"}]},
         )
         session.add_all([private_agent, public_agent])

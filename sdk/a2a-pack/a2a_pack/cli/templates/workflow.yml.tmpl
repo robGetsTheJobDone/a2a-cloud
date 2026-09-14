@@ -23,10 +23,10 @@ jobs:
           set -e
           test "$REGISTRY_USERNAME" = registry-push
           test -n "$REGISTRY_PASSWORD"
-          trap 'docker logout registry.a2acloud.io >/dev/null 2>&1 || true' EXIT
-          printf '%s' "$REGISTRY_PASSWORD" | docker login registry.a2acloud.io \
+          trap 'docker logout {{ registry_host }} >/dev/null 2>&1 || true' EXIT
+          printf '%s' "$REGISTRY_PASSWORD" | docker login {{ registry_host }} \
             --username "$REGISTRY_USERNAME" --password-stdin
-          IMG=registry.a2acloud.io/agents/{{ name }}
+          IMG={{ registry_host }}/agents/{{ name }}
           docker build --pull -t "$IMG:$GITHUB_SHA" -t "$IMG:latest" .
           push_output="$(docker push "$IMG:$GITHUB_SHA" 2>&1 | tee /dev/stderr)"
           docker push "$IMG:latest"
@@ -40,7 +40,7 @@ jobs:
 
       - name: bump deploy manifest
         run: |
-          IMG=registry.a2acloud.io/agents/{{ name }}
+          IMG={{ registry_host }}/agents/{{ name }}
           PINNED_IMAGE="$(cat .a2a-pushed-image)"
           rm -f .a2a-pushed-image
           [[ "$PINNED_IMAGE" =~ ^$IMG:[^@[:space:]]+@sha256:[0-9a-f]{64}$ ]]

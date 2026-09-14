@@ -121,7 +121,7 @@ def test_ensure_devbox_injects_credentials_when_given(
 def test_resolve_devbox_image_accepts_operator_digest(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    image = "registry.a2acloud.io/a2a/a2a-devbox@sha256:" + "a" * 64
+    image = "registry.example.com/a2a/a2a-devbox@sha256:" + "a" * 64
     monkeypatch.setattr(devbox, "DEVBOX_IMAGE", image)
 
     assert devbox._resolve_devbox_image() == image
@@ -133,7 +133,7 @@ def test_resolve_devbox_image_rejects_mutable_tag(
     monkeypatch.setattr(
         devbox,
         "DEVBOX_IMAGE",
-        "registry.a2acloud.io/a2a/a2a-devbox:latest",
+        "registry.example.com/a2a/a2a-devbox:latest",
     )
 
     with pytest.raises(RuntimeError, match="independently verified"):

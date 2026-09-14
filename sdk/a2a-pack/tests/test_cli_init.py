@@ -440,9 +440,9 @@ def test_init_scaffolds_go_sidecar_template(tmp_path):
     assert "language: go" in yaml_text
     assert "entrypoint: ./worker" in yaml_text
     assert "module a2a/math-go" in go_mod
-    assert "require a2acloud.io/a2a-pack-go v0.0.0" in go_mod
-    assert "replace a2acloud.io/a2a-pack-go => ./third_party/a2a-pack-go" in go_mod
-    assert 'a2apack "a2acloud.io/a2a-pack-go"' in main_go
+    assert "require a2apack.dev/a2a-pack-go v0.0.0" in go_mod
+    assert "replace a2apack.dev/a2a-pack-go => ./third_party/a2a-pack-go" in go_mod
+    assert 'a2apack "a2apack.dev/a2a-pack-go"' in main_go
     assert "type MathGo struct{}" in main_go
     assert "func (MathGo) Sum(" in main_go
     assert "a2apack.CompileAgent(agent)" in main_go
@@ -1119,7 +1119,7 @@ def test_workflow_template_does_not_embed_gitea_admin_credentials() -> None:
     assert "REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}" in workflow
     assert 'test "$REGISTRY_USERNAME" = registry-push' in workflow
     assert "--password-stdin" in workflow
-    assert "docker logout registry.a2acloud.io" in workflow
+    assert "docker logout {{ registry_host }}" in workflow
     assert "docker manifest inspect --verbose \"$PINNED_IMAGE\"" in workflow
     assert "@sha256:[0-9a-f]{64}" in workflow
     assert 'image: $PINNED_IMAGE' in workflow

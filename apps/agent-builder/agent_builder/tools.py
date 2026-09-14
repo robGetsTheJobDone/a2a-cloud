@@ -10,7 +10,6 @@
 from __future__ import annotations
 
 import asyncio
-import ast
 import base64
 import hashlib
 import io
@@ -61,10 +60,24 @@ class ToolContext:
     grant_token: str | None = None
 
 
+def platform_domain() -> str:
+    """Domain hosted agents live under (``<name>.<domain>``).
+
+    Set ``A2A_PLATFORM_DOMAIN`` on the deployment; the default is a neutral
+    placeholder so the code never points at someone else's infrastructure.
+    """
+    return os.environ.get("A2A_PLATFORM_DOMAIN", "example.com").strip()
+
+
+def docs_url(path: str = "") -> str:
+    base = os.environ.get("A2A_DOCS_URL") or f"https://docs.{platform_domain()}"
+    return base.rstrip("/") + ("/" + path.lstrip("/") if path else "")
+
+
 def _canonical_agent_url(name: str | None) -> str | None:
     if not isinstance(name, str) or not name.strip():
         return None
-    return f"https://{name.strip()}.a2acloud.io"
+    return f"https://{name.strip()}.{platform_domain()}"
 
 
 def _deploy_poll_url(body: dict[str, Any], name: str | None) -> str | None:
@@ -523,9 +536,9 @@ def build_tools(ctx: ToolContext) -> list[Any]:
                 "profile": profile_kind,
                 "files": written,
                 "docs": (
-                    "https://docs.a2acloud.io/concepts/packed-frontends"
+                    docs_url("concepts/packed-frontends")
                     if frontend_kind != "none"
-                    else "https://docs.a2acloud.io/quickstart"
+                    else docs_url("quickstart")
                 ),
             }
         )
@@ -1467,8 +1480,9 @@ def build_tools(ctx: ToolContext) -> list[Any]:
         ``{root, files: [{path, size}]}``.
         """
         try:
-            import a2a_pack
             import os as _os
+
+            import a2a_pack
 
             base = _os.path.dirname(_os.path.abspath(a2a_pack.__file__))
         except Exception as exc:  # noqa: BLE001
@@ -1506,8 +1520,9 @@ def build_tools(ctx: ToolContext) -> list[Any]:
         chase a deeper file.
         """
         try:
-            import a2a_pack
             import os as _os
+
+            import a2a_pack
 
             base = _os.path.dirname(_os.path.abspath(a2a_pack.__file__))
         except Exception as exc:  # noqa: BLE001
@@ -1757,6 +1772,7 @@ def _files_from_tarball(bundle: bytes) -> dict[str, bytes]:
 
 def _compile_agent_dsl_json(bundle: bytes) -> str:
     import sys
+
     import yaml
     from a2a_pack import apply_project_manifest, compile_agent_to_dsl
     from a2a_pack.cli.loader import load_agent_class

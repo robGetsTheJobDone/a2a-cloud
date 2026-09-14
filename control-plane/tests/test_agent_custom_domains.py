@@ -28,49 +28,49 @@ def test_custom_domain_records_match_dns_onboarding_shape() -> None:
     with pytest.raises(HTTPException, match="reserved for platform infrastructure"):
         agent_routes._validate_agent_name("agent-ingress-gateway")
     assert (
-        agent_routes._normalize_custom_hostname(" Agent.Example.com. ")
-        == "agent.example.com"
+        agent_routes._normalize_custom_hostname(" Agent.Customer.test. ")
+        == "agent.customer.test"
     )
     assert agent_routes._custom_domain_verification_record(
-        "agent.example.com",
+        "agent.customer.test",
         "tok",
     ) == (
-        "_a2a-agent.agent.example.com",
+        "_a2a-agent.agent.customer.test",
         "a2a-agent-verification=tok",
     )
     assert agent_routes._custom_domain_routing_record(
         "research-agent",
-        "agent.example.com",
+        "agent.customer.test",
     ) == (
         "CNAME",
-        "agent.example.com",
-        "research-agent.a2acloud.io",
+        "agent.customer.test",
+        "research-agent.example.com",
     )
-    assert agent_routes._is_apex_hostname("example.com")
-    assert not agent_routes._is_apex_hostname("agent.example.com")
+    assert agent_routes._is_apex_hostname("customer.test")
+    assert not agent_routes._is_apex_hostname("agent.customer.test")
     with pytest.raises(HTTPException):
-        agent_routes._normalize_custom_hostname("https://agent.example.com")
+        agent_routes._normalize_custom_hostname("https://agent.customer.test")
     with pytest.raises(HTTPException):
-        agent_routes._normalize_custom_hostname("agent.a2acloud.io")
+        agent_routes._normalize_custom_hostname("agent.example.com")
 
 
 def test_render_custom_domain_ingress_routes_hosts_to_trusted_gateway() -> None:
     doc = render_custom_domain_ingress(
         "research-agent",
-        ["agent.example.com", "demo.example.com", "agent.example.com"],
+        ["agent.customer.test", "demo.customer.test", "agent.customer.test"],
     )
 
     assert doc is not None
     assert doc["metadata"]["name"] == "research-agent-custom-domains"
     assert doc["spec"]["tls"] == [
         {
-            "hosts": ["agent.example.com", "demo.example.com"],
+            "hosts": ["agent.customer.test", "demo.customer.test"],
             "secretName": "research-agent-custom-domains-tls",
         }
     ]
     assert [rule["host"] for rule in doc["spec"]["rules"]] == [
-        "agent.example.com",
-        "demo.example.com",
+        "agent.customer.test",
+        "demo.customer.test",
     ]
     for rule in doc["spec"]["rules"]:
         backend = rule["http"]["paths"][0]["backend"]["service"]
@@ -90,13 +90,13 @@ def test_render_custom_domain_ingress_routes_hosts_to_trusted_gateway() -> None:
 def test_render_custom_domain_redirect_middleware_for_www_pair() -> None:
     routes = [
         {
-            "hostname": "www.example.com",
-            "canonical_hostname": "example.com",
+            "hostname": "www.customer.test",
+            "canonical_hostname": "customer.test",
             "redirect_enabled": True,
         },
         {
-            "hostname": "example.com",
-            "canonical_hostname": "example.com",
+            "hostname": "customer.test",
+            "canonical_hostname": "customer.test",
             "redirect_enabled": False,
         },
     ]
@@ -112,7 +112,7 @@ def test_render_custom_domain_redirect_middleware_for_www_pair() -> None:
         "traefik.ingress.kubernetes.io/router.middlewares"
     ].split(",")
     assert ingress_middlewares[0].startswith(
-        "agents-research-agent-redir-www-example-com-"
+        "agents-research-agent-redir-www-customer-test-"
     )
     assert ingress_middlewares[0].endswith("@kubernetescrd")
     assert len(ingress_middlewares) == 1
@@ -120,8 +120,8 @@ def test_render_custom_domain_redirect_middleware_for_www_pair() -> None:
     middleware = middlewares[0]
     assert middleware["kind"] == "Middleware"
     assert middleware["spec"]["redirectRegex"] == {
-        "regex": r"^https?://www\.example\.com(/.*)?$",
-        "replacement": "https://example.com${1}",
+        "regex": r"^https?://www\.customer\.test(/.*)?$",
+        "replacement": "https://customer.test${1}",
         "permanent": True,
     }
 
@@ -129,13 +129,13 @@ def test_render_custom_domain_redirect_middleware_for_www_pair() -> None:
 def test_render_custom_domain_http_redirect_uses_canonical_redirect_first() -> None:
     routes = [
         {
-            "hostname": "www.example.com",
-            "canonical_hostname": "example.com",
+            "hostname": "www.customer.test",
+            "canonical_hostname": "customer.test",
             "redirect_enabled": True,
         },
         {
-            "hostname": "example.com",
-            "canonical_hostname": "example.com",
+            "hostname": "customer.test",
+            "canonical_hostname": "customer.test",
             "redirect_enabled": False,
         },
     ]
@@ -145,7 +145,7 @@ def test_render_custom_domain_http_redirect_uses_canonical_redirect_first() -> N
     middlewares = doc["metadata"]["annotations"][
         "traefik.ingress.kubernetes.io/router.middlewares"
     ].split(",")
-    assert middlewares[0].startswith("agents-research-agent-redir-www-example-com-")
+    assert middlewares[0].startswith("agents-research-agent-redir-www-customer-test-")
     assert middlewares[0].endswith("@kubernetescrd")
     assert middlewares[1] == "agents-research-agent-custom-domains-https@kubernetescrd"
 
@@ -161,7 +161,7 @@ def test_apex_domain_response_includes_a_record_fallback(monkeypatch: pytest.Mon
         agent_id=1,
         user_id=1,
         agent_name="research-agent",
-        hostname="example.com",
+        hostname="customer.test",
         verification_token="tok",
         status="pending",
         created_at=datetime.now(timezone.utc),
@@ -171,9 +171,9 @@ def test_apex_domain_response_includes_a_record_fallback(monkeypatch: pytest.Mon
     out = agent_routes._agent_custom_domain_out(row)
 
     assert out.routing_record_type == "CNAME"
-    assert out.routing_record_value == "research-agent.a2acloud.io"
+    assert out.routing_record_value == "research-agent.example.com"
     assert out.routing_fallback_record_type == "A"
-    assert out.routing_fallback_record_name == "example.com"
+    assert out.routing_fallback_record_name == "customer.test"
     assert out.routing_fallback_record_value == "203.0.113.10"
 
 
@@ -194,7 +194,7 @@ async def test_agent_custom_domain_verification_syncs_ingress(monkeypatch: pytes
     )
 
     async with Session() as session:
-        user = User(email="owner@example.com", password_hash="hash")
+        user = User(email="owner@customer.test", password_hash="hash")
         session.add(user)
         await session.flush()
         agent = Agent(
@@ -202,10 +202,10 @@ async def test_agent_custom_domain_verification_syncs_ingress(monkeypatch: pytes
             name="research-agent",
             description="",
             version="1.0.0",
-            image="registry.a2acloud.io/agents/research-agent:latest",
+            image="registry.example.com/agents/research-agent:latest",
             public=True,
             status="running",
-            url="https://research-agent.a2acloud.io",
+            url="https://research-agent.example.com",
             card={"skills": [{"name": "search"}]},
         )
         session.add(agent)
@@ -213,30 +213,30 @@ async def test_agent_custom_domain_verification_syncs_ingress(monkeypatch: pytes
 
         pending = await agent_routes.add_agent_custom_domain(
             "research-agent",
-            AgentCustomDomainIn(hostname="Agent.Example.com"),
+            AgentCustomDomainIn(hostname="Agent.Customer.test"),
             user,
             session,
         )
-        assert pending.hostname == "agent.example.com"
+        assert pending.hostname == "agent.customer.test"
         assert pending.status == "pending"
         assert pending.url is None
 
         active = await agent_routes.verify_agent_custom_domain(
             "research-agent",
-            "agent.example.com",
+            "agent.customer.test",
             user,
             session,
         )
 
         assert active.status == "active"
-        assert active.url == "https://agent.example.com"
+        assert active.url == "https://agent.customer.test"
         assert synced == [
             (
                 "research-agent",
                 [
                     {
-                        "hostname": "agent.example.com",
-                        "canonical_hostname": "agent.example.com",
+                        "hostname": "agent.customer.test",
+                        "canonical_hostname": "agent.customer.test",
                         "redirect_enabled": False,
                     }
                 ],
@@ -265,7 +265,7 @@ async def test_agent_custom_domain_verification_activates_www_pair(
     )
 
     async with Session() as session:
-        user = User(email="owner@example.com", password_hash="hash")
+        user = User(email="owner@customer.test", password_hash="hash")
         session.add(user)
         await session.flush()
         agent = Agent(
@@ -273,10 +273,10 @@ async def test_agent_custom_domain_verification_activates_www_pair(
             name="research-agent",
             description="",
             version="1.0.0",
-            image="registry.a2acloud.io/agents/research-agent:latest",
+            image="registry.example.com/agents/research-agent:latest",
             public=True,
             status="running",
-            url="https://research-agent.a2acloud.io",
+            url="https://research-agent.example.com",
             card={"skills": [{"name": "search"}]},
         )
         session.add(agent)
@@ -284,15 +284,15 @@ async def test_agent_custom_domain_verification_activates_www_pair(
 
         pending = await agent_routes.add_agent_custom_domain(
             "research-agent",
-            AgentCustomDomainIn(hostname="example.com", include_www=True),
+            AgentCustomDomainIn(hostname="customer.test", include_www=True),
             user,
             session,
         )
-        assert pending.hostname == "example.com"
+        assert pending.hostname == "customer.test"
 
         active = await agent_routes.verify_agent_custom_domain(
             "research-agent",
-            "example.com",
+            "customer.test",
             user,
             session,
         )
@@ -303,13 +303,13 @@ async def test_agent_custom_domain_verification_activates_www_pair(
                 "research-agent",
                 [
                     {
-                        "hostname": "example.com",
-                        "canonical_hostname": "example.com",
+                        "hostname": "customer.test",
+                        "canonical_hostname": "customer.test",
                         "redirect_enabled": False,
                     },
                     {
-                        "hostname": "www.example.com",
-                        "canonical_hostname": "example.com",
+                        "hostname": "www.customer.test",
+                        "canonical_hostname": "customer.test",
                         "redirect_enabled": True,
                     },
                 ],
@@ -323,8 +323,8 @@ async def test_agent_custom_domain_verification_activates_www_pair(
             )
         ).scalars().all()
         assert [(row.hostname, row.status) for row in rows] == [
-            ("example.com", "active"),
-            ("www.example.com", "active"),
+            ("customer.test", "active"),
+            ("www.customer.test", "active"),
         ]
 
     await engine.dispose()

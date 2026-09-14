@@ -28,13 +28,13 @@ spec:
       containers:
         - name: agent
           # tag is rewritten by the build workflow on every push
-          image: registry.a2acloud.io/agents/{{ name }}:latest
+          image: {{ registry_host }}/agents/{{ name }}:latest
           imagePullPolicy: Always
           env:
             - name: A2A_AGENT_IMAGE
-              value: registry.a2acloud.io/agents/{{ name }}:latest
+              value: {{ registry_host }}/agents/{{ name }}:latest
             - name: A2A_RENDER_IMAGE
-              value: registry.a2acloud.io/agents/{{ name }}:latest
+              value: {{ registry_host }}/agents/{{ name }}:latest
           ports:
             - containerPort: 8000
               name: http1
@@ -83,10 +83,10 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
 spec:
   tls:
-    - hosts: [{{ name }}.a2acloud.io]
-      secretName: {{ name }}-a2acloud-io-tls
+    - hosts: [{{ name }}.{{ platform_domain }}]
+      secretName: {{ name }}-tls
   rules:
-    - host: {{ name }}.a2acloud.io
+    - host: {{ name }}.{{ platform_domain }}
       http:
         paths:
           - path: /

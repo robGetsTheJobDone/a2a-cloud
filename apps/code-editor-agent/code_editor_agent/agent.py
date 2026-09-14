@@ -2,9 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Awaitable, Callable
-from contextlib import suppress
-from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -12,6 +9,9 @@ import re
 import shutil
 import tempfile
 import time
+from collections.abc import Awaitable, Callable
+from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar, Literal, Mapping
 from urllib.parse import quote
@@ -26,7 +26,6 @@ from a2a_pack import (
     WorkspaceAccess,
     WorkspaceMode,
 )
-
 
 PermissionMode = Literal["default", "plan", "full_auto", "auto"]
 OutputFormat = Literal["text", "json", "stream-json"]
@@ -908,7 +907,7 @@ class SharedOpenHarnessCodeEditorAgent(A2AAgent):
                 "-c",
                 "user.name=a2a-code-editor",
                 "-c",
-                "user.email=noreply@a2acloud.io",
+                "user.email=" + _git_commit_email(),
                 "commit",
                 "-m",
                 _commit_message(prompt),
@@ -1183,6 +1182,11 @@ def _without_first_continue_arg(cmd: list[str]) -> list[str]:
             continue
         out.append(arg)
     return out
+
+
+def _git_commit_email() -> str:
+    domain = os.environ.get("A2A_PLATFORM_DOMAIN", "example.com").strip()
+    return os.environ.get("A2A_GIT_COMMIT_EMAIL") or f"a2a-code-editor@{domain}"
 
 
 async def _run_git(

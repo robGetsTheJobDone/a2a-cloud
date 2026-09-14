@@ -390,7 +390,7 @@ async def test_user_kernel_evolution_persists_disabled_proposal_and_replays() ->
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-evolution@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-evolution@e2e.test")
             session.add(ChatThread(id="thread-evolution", user_id=payload["user_id"], title="Evolution"))
             await session.commit()
 
@@ -496,7 +496,7 @@ async def test_user_kernel_evolution_accepts_multi_agent_population_runs() -> No
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-evolution-population@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-evolution-population@e2e.test")
 
         headers = {"Authorization": f"Bearer {payload['token']}"}
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -566,7 +566,7 @@ async def test_user_kernel_evolution_is_owner_scoped_and_reports_replay_mismatch
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            owner_payload = await ensure_e2e_user_token(session, email="kernel-evolution-owner@a2acloud.test")
+            owner_payload = await ensure_e2e_user_token(session, email="kernel-evolution-owner@e2e.test")
             other = User(id=99, email="kernel-evolution-other@example.test", password_hash="x")
             session.add(other)
             await session.commit()

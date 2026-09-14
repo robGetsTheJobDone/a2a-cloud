@@ -423,7 +423,7 @@ def test_the_reviewer_identity_outlives_a_heartbeating_review() -> None:
 
 _RAW_EMAIL = (
     b"From: client@corp.io\r\n"
-    b"To: mailer@a2acloud.io\r\n"
+    b"To: mailer@example.com\r\n"
     b"Subject: Need pricing\r\n"
     b"Message-ID: <pricing@corp.io>\r\n"
     b"\r\n"
@@ -464,7 +464,7 @@ async def test_mailbox_invocation_bearer_is_scoped_not_a_session(
         image="x",
         public=True,
         status="running",
-        url="https://mailer.a2acloud.io",
+        url="https://mailer.example.com",
         card={"skills": [{"id": "handle_email", "tags": [EMAIL_HANDLER_TAG]}]},
     )
     await mail_ingress_module._invoke_agent_with_email(
@@ -523,7 +523,7 @@ async def test_mail_invocation_puts_the_credential_in_the_json_body(
         image="x",
         public=True,
         status="running",
-        url="https://mailer.a2acloud.io",
+        url="https://mailer.example.com",
         card={"skills": [{"id": "handle_email", "tags": [EMAIL_HANDLER_TAG]}]},
     )
     await mail_ingress_module._invoke_agent_with_email(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,27 +13,36 @@ class Settings(BaseSettings):
     jwt_alg: str = "HS256"
     jwt_ttl_seconds: int = 60 * 60 * 24 * 7  # 7 days
 
+    # Root of every public hostname the platform uses. Each derived URL below
+    # (``api.``, ``app.``, ``docs.``, ``registry.``, ``auth.``, ``langfuse.``,
+    # ``mail.``, ``agents.``) falls back to ``<label>.<platform_domain>`` when
+    # its own setting is left empty, so a self-hosted install only has to set
+    # ``A2A_CP_PLATFORM_DOMAIN``. Any individual URL can still be overridden.
+    platform_domain: str = "example.com"
+
     # Keycloak OAuth identity bridge (E1-P2). When enabled, ``current_user``
     # also accepts Keycloak-issued RS256 access tokens, validated via the realm
     # JWKS, and provisions a control-plane User on first login (keyed by the
     # token ``sub``, linked by verified email when one already exists). Browser
     # sessions use short-lived CP HS256 cookies minted by the OIDC callback.
     keycloak_enabled: bool = True
-    keycloak_issuer: str = "https://auth.a2acloud.io/realms/a2acloud"
+    keycloak_realm: str = "a2a"
+    # Derived: ``https://auth.<platform_domain>/realms/<keycloak_realm>``.
+    keycloak_issuer: str = ""
     keycloak_backend_url: str | None = None
-    keycloak_jwks_url: str = (
-        "https://auth.a2acloud.io/realms/a2acloud/protocol/openid-connect/certs"
-    )
-    keycloak_browser_client_id: str = "a2acloud-dashboard"
+    # Derived from ``keycloak_issuer``.
+    keycloak_jwks_url: str = ""
+    keycloak_browser_client_id: str = "a2a-dashboard"
     keycloak_browser_client_secret: str | None = None
-    keycloak_admin_client_id: str = "a2acloud-admin"
+    keycloak_admin_client_id: str = "a2a-admin"
     oidc_state_cookie_name: str = "a2a_oidc_state"
     oidc_state_ttl_seconds: int = 10 * 60
     cli_session_exchange_ttl_seconds: int = Field(default=60, ge=10, le=300)
     cli_session_confirmation_cookie_name: str = "__Host-a2a_cli_confirm"
 
     agents_namespace: str = "agents"
-    ingress_host_template: str = "{name}.a2acloud.io"
+    # Derived: ``{name}.<platform_domain>``.
+    ingress_host_template: str = ""
     # Knative scale-to-zero defaults for hosted user agents. Ordinary agents
     # idle down to zero pods; ``agents_max_scale`` bounds burst. Platform-
     # critical agents listed in ``always_on_agents`` (comma-separated names)
@@ -51,16 +60,26 @@ class Settings(BaseSettings):
     a2a_pack_registry_auto_detect: bool = False
     a2a_pack_registry_url: str = "http://registry.registry.svc.cluster.local:5000"
     a2a_pack_image_repo: str = "a2a/a2a-pack-base"
+    # Container registry that hosts platform base images and built agent
+    # images. Derived: ``registry.<platform_domain>``.
+    image_registry: str = ""
+    # Repository prefix for built agent images. Derived: ``<image_registry>/agents``.
+    image_repo_prefix: str = ""
     # Default Knative request timeout for hosted agents when neither a runtime
     # nor skill-level timeout is declared. Keep this aligned with the cluster's
     # max-revision-timeout-seconds so durable API runs are not cut at 10m.
     agents_default_timeout_seconds: int = 1800
     # Public URL the deployed agent pods call back to when verifying
-    # caller JWTs against /v1/me. Cluster-internal default works for
-    # agents in the same cluster; override in prod if pods are remote.
-    public_cp_url: str = "http://control-plane.control-plane.svc.cluster.local"
+    # caller JWTs against /v1/me. Derived: ``https://api.<platform_domain>``.
+    public_cp_url: str = ""
     # Browser-facing dashboard origin used by OIDC redirects and auth errors.
-    dashboard_url: str = "https://app.a2acloud.io"
+    # Derived: ``https://app.<platform_domain>``.
+    dashboard_url: str = ""
+    # Public documentation site. Derived: ``https://docs.<platform_domain>``.
+    docs_url: str = ""
+    # Cookie domain shared across platform subdomains (legacy session cookie
+    # clean-up). Derived: ``.<platform_domain>``.
+    shared_cookie_domain: str = ""
     session_cookie_name: str = "__Host-a2a_session"
     session_cookie_secure: bool = True
     # Hosted agent origins never receive the dashboard's host-only session.
@@ -79,7 +98,8 @@ class Settings(BaseSettings):
     # session so a token that does leak stops working quickly.
     agent_session_ttl_seconds: int = Field(default=12 * 60 * 60, ge=300)
 
-    langfuse_base_url: str = "https://langfuse.a2acloud.io"
+    # Derived: ``https://langfuse.<platform_domain>``.
+    langfuse_base_url: str = ""
     langfuse_provisioning_enabled: bool = True
     langfuse_provisioning_mode: str = "shared_instance"
     langfuse_org_public_key: str | None = None
@@ -197,7 +217,8 @@ class Settings(BaseSettings):
     agent_studio_harness_cleanup_enabled: bool = True
     agent_studio_harness_cleanup_interval_seconds: float = 3600.0
     agent_studio_harness_cleanup_ttl_seconds: int = 24 * 60 * 60
-    agent_studio_harness_cleanup_owner_email: str = "agent-studio-harness@a2acloud.io"
+    # Derived: ``agent-studio-harness@<platform_domain>``.
+    agent_studio_harness_cleanup_owner_email: str = ""
     agent_studio_harness_cleanup_name_prefix: str = "studio-harness-"
     agent_studio_harness_cleanup_max_per_run: int = 10
     gitea_token_sweeper_enabled: bool = True
@@ -232,17 +253,19 @@ class Settings(BaseSettings):
     # chat threads. Both loops are off unless explicitly enabled.
     mailbox_provisioning_enabled: bool = False
     mailbox_provisioner_interval_seconds: float = 15.0
-    mailu_api_url: str = "https://mail.a2acloud.io/api/v1"
+    # Derived: ``https://mail.<platform_domain>/api/v1``.
+    mailu_api_url: str = ""
     mailu_api_token: str | None = None
-    # Separate domain from a2acloud.io so agent addresses can never collide
+    # Separate domain from the platform domain so agent addresses can never collide
     # with human/system senders (postmaster@, no-reply@, ...) and a
     # deliverability hit on agent mail stays off the primary domain.
-    agent_mail_domain: str = "agents.a2acloud.io"
+    # Derived: ``agents.<platform_domain>``.
+    agent_mail_domain: str = ""
     agent_mail_imap_host: str = "mailu-front.mailu.svc.cluster.local"
     agent_mail_imap_port: int = 993
     agent_mail_smtp_host: str = "mailu-front.mailu.svc.cluster.local"
     agent_mail_smtp_port: int = 587
-    # Mailu front serves the public mail.a2acloud.io cert; the cluster-local
+    # Mailu front serves the public ``mail.<platform_domain>`` cert; the cluster-local
     # service name won't match it, so hostname verification stays off for
     # in-cluster IMAP/SMTP connections.
     agent_mail_tls_verify: bool = False
@@ -325,6 +348,54 @@ class Settings(BaseSettings):
         if isinstance(value, str) and value.strip().lower() in {"", "none", "null"}:
             return None
         return value
+
+    @model_validator(mode="after")
+    def _derive_platform_urls(self) -> "Settings":
+        domain = self.platform_domain.strip().strip(".").lower() or "example.com"
+        self.platform_domain = domain
+
+        def _default(name: str, value: str) -> None:
+            if not str(getattr(self, name) or "").strip():
+                setattr(self, name, value)
+
+        _default("keycloak_issuer", f"https://auth.{domain}/realms/{self.keycloak_realm}")
+        _default(
+            "keycloak_jwks_url",
+            f"{self.keycloak_issuer.rstrip('/')}/protocol/openid-connect/certs",
+        )
+        _default("ingress_host_template", "{name}." + domain)
+        _default("image_registry", f"registry.{domain}")
+        _default("image_repo_prefix", f"{self.image_registry.rstrip('/')}/agents")
+        _default("public_cp_url", f"https://api.{domain}")
+        _default("dashboard_url", f"https://app.{domain}")
+        _default("docs_url", f"https://docs.{domain}")
+        _default("shared_cookie_domain", f".{domain}")
+        _default("langfuse_base_url", f"https://langfuse.{domain}")
+        _default("agent_studio_harness_cleanup_owner_email", f"agent-studio-harness@{domain}")
+        _default("mailu_api_url", f"https://mail.{domain}/api/v1")
+        _default("agent_mail_domain", f"agents.{domain}")
+        return self
+
+    @property
+    def platform_host_suffix(self) -> str:
+        """``.<platform_domain>``: the suffix of every hosted agent hostname."""
+        return f".{self.platform_domain}"
+
+    @property
+    def base_image_repo(self) -> str:
+        """Registry path of the a2a-pack base image (without a tag)."""
+        return f"{self.image_registry.rstrip('/')}/{self.a2a_pack_image_repo}"
+
+    def sidecar_base_image_repo(self, sidecar_base_image: str) -> str:
+        return f"{self.image_registry.rstrip('/')}/a2a/{sidecar_base_image}"
+
+    def agent_image(self, name: str, tag: str) -> str:
+        """Fully qualified image reference for a platform-built agent."""
+        return f"{self.image_repo_prefix.rstrip('/')}/{name}:{tag}"
+
+    def agent_image_prefix(self, name: str) -> str:
+        """``<image_repo_prefix>/<name>:`` — prefix shared by every tag of an agent."""
+        return f"{self.image_repo_prefix.rstrip('/')}/{name}:"
 
 
 settings = Settings()

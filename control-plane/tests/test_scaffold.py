@@ -47,7 +47,7 @@ def test_stamp_platform_files_uses_yaml_runtime_resources(tmp_path: Path) -> Non
     assert "name: registry-pull-credentials" in deployment
     assert "a2a/workload-class: user" in deployment
     dockerfile = (tmp_path / "Dockerfile").read_text()
-    assert "FROM registry.a2acloud.io/a2a/a2a-pack-base:latest" in dockerfile
+    assert "FROM registry.example.com/a2a/a2a-pack-base:latest" in dockerfile
     assert "apiVersion: serving.knative.dev/v1" in deployment
     assert "kind: Service" in deployment
     assert "kind: Deployment" not in deployment
@@ -523,7 +523,7 @@ def test_stamp_platform_files_canonicalizes_cpu_for_kubernetes(
 
 
 def test_render_manifests_exposes_runtime_image_to_agent() -> None:
-    image = "registry.a2acloud.io/agents/demo-agent:abc123"
+    image = "registry.example.com/agents/demo-agent:abc123"
     docs = render_manifests(
         "demo-agent",
         image,
@@ -587,7 +587,7 @@ def test_render_manifests_exposes_runtime_image_to_agent() -> None:
 def test_render_manifests_uses_deployment_for_always_on() -> None:
     docs = render_manifests(
         "always-agent",
-        "registry.a2acloud.io/agents/always-agent:abc123",
+        "registry.example.com/agents/always-agent:abc123",
         public=True,
         card={"runtime": {"availability": "always_on"}},
         owner_id=123,
@@ -610,7 +610,7 @@ def test_render_manifests_uses_deployment_for_always_on() -> None:
 def test_render_manifests_uses_runtime_and_skill_timeouts() -> None:
     docs = render_manifests(
         "agent-studio",
-        "registry.a2acloud.io/agents/agent-studio:abc123",
+        "registry.example.com/agents/agent-studio:abc123",
         public=False,
         card={
             "runtime": {"max_runtime_seconds": 900},
@@ -634,7 +634,7 @@ def test_render_manifests_uses_runtime_and_skill_timeouts() -> None:
 def test_render_manifests_never_projects_platform_signers() -> None:
     docs = render_manifests(
         "meta-agent",
-        "registry.a2acloud.io/agents/meta-agent:abc123",
+        "registry.example.com/agents/meta-agent:abc123",
         public=False,
         card={"runtime": {"grant_signing": True}},
     )
@@ -1138,7 +1138,7 @@ def test_stamp_platform_files_generates_sidecar_node_build_for_typescript(
 
     dockerfile = (tmp_path / "Dockerfile").read_text()
     dockerignore = (tmp_path / ".dockerignore").read_text()
-    assert "FROM registry.a2acloud.io/a2a/a2a-sidecar-node:latest" in dockerfile
+    assert "FROM registry.example.com/a2a/a2a-sidecar-node:latest" in dockerfile
     assert "RUN a2a-sidecar-build typescript" in dockerfile
     assert "node dist/worker.js &" in dockerfile
     assert "a2a sidecar --dsl" in dockerfile
@@ -1165,7 +1165,7 @@ def test_stamp_platform_files_generates_sidecar_build_for_compiled_languages(
         _stamp_platform_files(workdir, name=f"{language}-agent", entrypoint="unused")
 
         dockerfile = (workdir / "Dockerfile").read_text()
-        assert f"FROM registry.a2acloud.io/a2a/{image}:latest" in dockerfile
+        assert f"FROM registry.example.com/a2a/{image}:latest" in dockerfile
         assert f"RUN a2a-sidecar-build {language}" in dockerfile
         assert "./worker &" in dockerfile
 
@@ -1181,7 +1181,7 @@ def test_stamp_platform_files_supports_legacy_python_without_dsl(
 
     dockerfile = (tmp_path / "Dockerfile").read_text()
     deployment = (tmp_path / "deploy" / "20-deployment.yaml").read_text()
-    assert "FROM registry.a2acloud.io/a2a/a2a-pack-base:latest" in dockerfile
+    assert "FROM registry.example.com/a2a/a2a-pack-base:latest" in dockerfile
     assert "ENV A2A_ENTRYPOINT=agent:LegacyAgent" in dockerfile
     assert "timeoutSeconds: 1800" in deployment
 
@@ -1370,7 +1370,7 @@ def test_commit_and_push_runtime_writes_hidden_build_repo(tmp_path: Path) -> Non
     assert "REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}" in workflow
     assert 'test "$REGISTRY_USERNAME" = registry-push' in workflow
     assert "--password-stdin" in workflow
-    assert "docker logout registry.a2acloud.io" in workflow
+    assert "docker logout registry.example.com" in workflow
     assert 'docker push "$IMG:$IMAGE_TAG"' in workflow
     assert "docker manifest inspect --verbose \"$PINNED_IMAGE\"" in workflow
     assert "@sha256:[0-9a-f]{64}" in workflow
@@ -1378,8 +1378,8 @@ def test_commit_and_push_runtime_writes_hidden_build_repo(tmp_path: Path) -> Non
     assert 'value: $PINNED_IMAGE' in workflow
     assert "a2a/rebuild-id:" in workflow
     assert "A2A_AGENT_IMAGE" in deployment
-    assert "image: registry.a2acloud.io/agents/demo-agent:abc123" in deployment
-    assert "value: registry.a2acloud.io/agents/demo-agent:abc123" in deployment
+    assert "image: registry.example.com/agents/demo-agent:abc123" in deployment
+    assert "value: registry.example.com/agents/demo-agent:abc123" in deployment
     assert 'a2a/rebuild-id: "abc123"' in deployment
 
 
@@ -1430,8 +1430,8 @@ def test_commit_and_push_runtime_from_repo_uses_exact_source_sha(
     assert f'IMAGE_TAG: "{source_sha}"' in workflow
     assert "bad workflow" not in workflow
     assert "bad deploy" not in deployment
-    assert f"image: registry.a2acloud.io/agents/demo-agent:{source_sha}" in deployment
-    assert f"value: registry.a2acloud.io/agents/demo-agent:{source_sha}" in deployment
+    assert f"image: registry.example.com/agents/demo-agent:{source_sha}" in deployment
+    assert f"value: registry.example.com/agents/demo-agent:{source_sha}" in deployment
     assert f'a2a/rebuild-id: "{source_sha}"' in deployment
     assert "FROM bad" not in dockerfile
 

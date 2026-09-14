@@ -1,8 +1,7 @@
 """Shared fixtures for the e2e suite.
 
-The default target is the production a2a cluster (https://api.a2acloud.io).
-Override with ``A2A_E2E_API_URL`` for the local docker-desktop cluster
-(``http://api.127-0-0-1.nip.io``) or any other deployment.
+The target is ``A2A_E2E_API_URL`` (or ``A2A_API_URL``); it defaults to a
+control plane on ``http://127.0.0.1:8000``. Point it at any deployment.
 
 Production runs should provide pre-minted bearer tokens through
 ``A2A_E2E_BEARER_TOKEN`` and ``A2A_E2E_OTHER_BEARER_TOKEN``. Legacy signup is
@@ -24,8 +23,11 @@ import httpx
 import pytest
 import pytest_asyncio
 
-
-API_URL = os.environ.get("A2A_E2E_API_URL", "https://api.a2acloud.io").rstrip("/")
+API_URL = (
+    os.environ.get("A2A_E2E_API_URL")
+    or os.environ.get("A2A_API_URL")
+    or "http://127.0.0.1:8000"
+).rstrip("/")
 DEFAULT_TIMEOUT = 30.0
 
 

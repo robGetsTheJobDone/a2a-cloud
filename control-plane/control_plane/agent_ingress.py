@@ -58,7 +58,6 @@ AGENT_INGRESS_GATEWAY_SERVICE = "agent-ingress-gateway"
 AGENT_INGRESS_GATEWAY_HEALTH_PATH = "/__gateway/healthz"
 AGENT_INGRESS_GATEWAY_LIVE_PATH = "/__gateway/livez"
 
-_PLATFORM_HOST_SUFFIX = ".a2acloud.io"
 _AGENT_NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,126}[a-z0-9])?$")
 _INVOKE_RE = re.compile(r"^/(?:_a2a/)?invoke/([^/]+)$")
 _MCP_PATHS = frozenset(
@@ -302,9 +301,10 @@ def _normalized_host(host_header: str) -> str | None:
 
 
 def _platform_agent_name(host: str) -> str | None:
-    if not host.endswith(_PLATFORM_HOST_SUFFIX):
+    suffix = settings.platform_host_suffix
+    if not host.endswith(suffix):
         return None
-    name = host[: -len(_PLATFORM_HOST_SUFFIX)]
+    name = host[: -len(suffix)]
     if not _AGENT_NAME_RE.fullmatch(name):
         return None
     return name
@@ -426,7 +426,7 @@ def _valid_grant_metadata(
     audience = str(grant.audience).rstrip("/")
     accepted = {
         target.name,
-        f"https://{target.name}.a2acloud.io",
+        f"https://{target.name}{settings.platform_host_suffix}",
         f"http://{target.name}.agents.svc.cluster.local",
     }
     if audience not in accepted:
@@ -909,7 +909,7 @@ def _timestamp(seconds: int) -> datetime | None:
 
 
 def _public_cp_url() -> str:
-    return str(settings.public_cp_url or "https://api.a2acloud.io").rstrip("/")
+    return str(settings.public_cp_url).rstrip("/")
 
 
 def _evidence_payload(bundle: EvidenceBundle) -> dict[str, Any]:

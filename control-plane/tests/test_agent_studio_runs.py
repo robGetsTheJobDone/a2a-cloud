@@ -464,7 +464,7 @@ def test_report_payload_and_status_mapping():
     report = {
         "status": "succeeded",
         "agent_name": "triage-desk",
-        "agent_url": "https://triage-desk.a2acloud.io",
+        "agent_url": "https://triage-desk.example.com",
         "deployment_id": "dpl_abc",
         "tests": [{"status": "pass"}, {"status": "pass"}, {"status": "warning"}],
         "review": {"critical_count": 1, "warning_count": 2, "review_id": "rev_9"},
@@ -484,7 +484,7 @@ def test_report_payload_and_status_mapping():
     assert payload["tests_passed"] == 2
     assert payload["tests_total"] == 3
     assert payload["findings"] == 3
-    assert payload["mcp_url"] == "https://triage-desk.a2acloud.io/mcp"
+    assert payload["mcp_url"] == "https://triage-desk.example.com/mcp"
     assert payload["iterations"] == 2
     assert payload["receipt_id"] == "rev_9"
     assert payload["stop_reason"] == "acceptance_passed_with_residual_risks"
@@ -500,7 +500,7 @@ def test_partial_report_with_live_url_is_not_promoted_to_live():
         {
             "status": "partial",
             "agent_name": "partial-app",
-            "agent_url": "https://partial-app.a2acloud.io",
+            "agent_url": "https://partial-app.example.com",
             "tests": [{"name": "agent-card", "status": "pass"}],
         },
     )
@@ -512,7 +512,7 @@ def test_full_stack_report_requires_capability_evidence_before_live():
     report = {
         "status": "succeeded",
         "agent_name": "quote-judge",
-        "agent_url": "https://quote-judge.a2acloud.io",
+        "agent_url": "https://quote-judge.example.com",
         "build_brief": {
             "app_spec": {
                 "profile": "full_stack",
@@ -647,7 +647,7 @@ async def test_run_studio_build_persists_progress_and_report(monkeypatch):
         ),
         _sse(
             '{"type":"result","result":{"status":"succeeded","agent_name":"triage-desk",'
-            '"agent_url":"https://triage-desk.a2acloud.io","deployment_id":"dpl_x",'
+            '"agent_url":"https://triage-desk.example.com","deployment_id":"dpl_x",'
             '"tests":[{"status":"pass"}],"review":{"warning_count":1,"review_id":"rev_1"},'
             '"iterations":[{"index":0}],"budgets":{"spend_cents":12},'
             '"publish_next_step":"already-private"}}'
@@ -677,7 +677,7 @@ async def test_run_studio_build_persists_progress_and_report(monkeypatch):
         assert run.budget_spent_cents == 12
         assert (
             run.report
-            and run.report["mcp_url"] == "https://triage-desk.a2acloud.io/mcp"
+            and run.report["mcp_url"] == "https://triage-desk.example.com/mcp"
         )
 
         events = (
@@ -769,7 +769,7 @@ async def test_run_studio_build_recovers_verified_live_deployment(monkeypatch):
                 image="registry.example/recovered:latest",
                 public=False,
                 status="ready",
-                url="https://recovered-agent.a2acloud.io",
+                url="https://recovered-agent.example.com",
                 card={"name": "recovered-agent"},
             )
         )
@@ -790,7 +790,7 @@ async def test_run_studio_build_recovers_verified_live_deployment(monkeypatch):
 
     class _RecoveringClient(_FakeClient):
         async def get(self, url, **kwargs):
-            assert url == "https://recovered-agent.a2acloud.io/.well-known/agent-card"
+            assert url == "https://recovered-agent.example.com/.well-known/agent-card"
             return SimpleNamespace(
                 status_code=200,
                 json=lambda: {"name": "recovered-agent"},
@@ -822,7 +822,7 @@ async def test_run_studio_build_recovers_verified_live_deployment(monkeypatch):
         assert run.report and run.report["recovered_live_deployment"] is True
         assert run.report["status"] == "succeeded"
         assert run.report["acceptance"] == {"agent-card": "pass"}
-        assert run.report["agent_url"] == "https://recovered-agent.a2acloud.io"
+        assert run.report["agent_url"] == "https://recovered-agent.example.com"
 
 
 def _fake_grant(**kwargs):

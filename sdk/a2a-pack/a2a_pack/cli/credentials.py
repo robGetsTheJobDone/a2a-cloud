@@ -6,7 +6,10 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_API_URL = "https://api.a2acloud.io"
+from .platform import DEFAULT_PLATFORM_DOMAIN
+
+#: API of the public hosted instance; see ``platform.py`` for derivation rules.
+DEFAULT_API_URL = f"https://api.{DEFAULT_PLATFORM_DOMAIN}"
 
 
 def _config_dir() -> Path:

@@ -43,10 +43,10 @@ async def _seed_agent(session: AsyncSession) -> Agent:
         name="invoice-bot",
         description="Invoice bot",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         public=True,
         status="running",
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={},
         gitea_owner="a2a-acme",
     )
@@ -187,9 +187,9 @@ async def test_worker_restamps_runtime_and_records_deployment(
     assert deploy.trigger == "source_push"
     assert deploy.status == "building"
     assert deploy.head_sha == "a" * 40
-    assert deploy.image == "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40
+    assert deploy.image == "registry.example.com/agents/invoice-bot:" + "a" * 40
     assert agent.status == "building"
-    assert agent.image == "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40
+    assert agent.image == "registry.example.com/agents/invoice-bot:" + "a" * 40
     assert [event.stage for event in events] == [
         "source",
         "database",

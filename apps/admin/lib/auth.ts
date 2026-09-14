@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { platformDomain } from "./platform";
 
 export type AdminSession = {
   sub: string;
@@ -58,19 +59,25 @@ function sessionSecret(): string {
   return process.env.ADMIN_SESSION_SECRET || "";
 }
 
+export function keycloakRealm(): string {
+  return process.env.ADMIN_KEYCLOAK_REALM || "a2a";
+}
+
 export function keycloakIssuer(): string {
-  return (process.env.ADMIN_KEYCLOAK_ISSUER || "https://auth.a2acloud.io/realms/a2acloud").replace(
+  return (
+    process.env.ADMIN_KEYCLOAK_ISSUER || `https://auth.${platformDomain()}/realms/${keycloakRealm()}`
+  ).replace(
     /\/$/,
     "",
   );
 }
 
 export function keycloakClientId(): string {
-  return process.env.ADMIN_KEYCLOAK_CLIENT_ID || "a2acloud-admin";
+  return process.env.ADMIN_KEYCLOAK_CLIENT_ID || "a2a-admin";
 }
 
 export function adminPublicUrl(): string {
-  return (process.env.ADMIN_PUBLIC_URL || "https://admin.a2acloud.io").replace(/\/$/, "");
+  return (process.env.ADMIN_PUBLIC_URL || `https://admin.${platformDomain()}`).replace(/\/$/, "");
 }
 
 export function adminRedirectUri(): string {

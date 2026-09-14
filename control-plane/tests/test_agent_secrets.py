@@ -139,7 +139,7 @@ def test_ensure_agent_secret_projection_patches_knative_service_when_deployment_
                             "containers": [
                                 {
                                     "name": "agent",
-                                    "image": "registry.a2acloud.io/agents/demo:latest",
+                                    "image": "registry.example.com/agents/demo:latest",
                                     "ports": [{"containerPort": 8000, "name": "http1"}],
                                     "envFrom": [{"configMapRef": {"name": "shared"}}],
                                 }
@@ -177,7 +177,7 @@ def test_ensure_agent_secret_projection_patches_knative_service_when_deployment_
                         "containers": [
                             {
                                 "name": "agent",
-                                "image": "registry.a2acloud.io/agents/demo:latest",
+                                "image": "registry.example.com/agents/demo:latest",
                                 "ports": [{"containerPort": 8000, "name": "http1"}],
                                 "envFrom": [
                                     {"configMapRef": {"name": "shared"}},

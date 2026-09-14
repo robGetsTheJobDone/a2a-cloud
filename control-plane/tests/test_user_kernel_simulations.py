@@ -30,7 +30,7 @@ async def test_all_user_kernel_starter_templates_run_as_dashboard_specs() -> Non
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-template-defaults@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-template-defaults@e2e.test")
 
         headers = {"Authorization": f"Bearer {payload['token']}"}
         async with AsyncClient(
@@ -235,7 +235,7 @@ async def test_user_kernel_simulation_rejects_foreign_thread_and_mutation_spec()
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-sim-negative@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-sim-negative@e2e.test")
             other = User(id=99, email="other-kernel@example.test", password_hash="x")
             session.add_all(
                 [
@@ -662,7 +662,7 @@ async def test_hybrid_user_kernel_simulation_invokes_live_agent_and_replays(
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-live@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-live@e2e.test")
             session.add(ChatThread(id="thread-live", user_id=payload["user_id"], title="Live kernel"))
             agent = Agent(
                 owner_id=payload["user_id"],
@@ -787,7 +787,7 @@ async def test_hybrid_user_kernel_simulation_rejects_unavailable_live_agent() ->
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-live-stopped@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-live-stopped@e2e.test")
             session.add(
                 Agent(
                     owner_id=payload["user_id"],
@@ -830,7 +830,7 @@ async def test_hybrid_user_kernel_simulation_rejects_generic_starter_template_ac
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-live-generic@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-live-generic@e2e.test")
 
         headers = {"Authorization": f"Bearer {payload['token']}"}
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -862,7 +862,7 @@ async def test_hybrid_user_kernel_simulation_rejects_unknown_live_skill() -> Non
 
         app.dependency_overrides[get_session] = override_session
         async with Session() as session:
-            payload = await ensure_e2e_user_token(session, email="kernel-live-skill@a2acloud.test")
+            payload = await ensure_e2e_user_token(session, email="kernel-live-skill@e2e.test")
             session.add(
                 Agent(
                     owner_id=payload["user_id"],

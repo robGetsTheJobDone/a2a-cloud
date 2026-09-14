@@ -18,8 +18,10 @@ import httpx
 from . import credentials
 from .api_client import ControlPlaneClient
 
-DEFAULT_OAUTH_ISSUER = "https://auth.a2acloud.io/realms/a2acloud"
-DEFAULT_OAUTH_CLIENT_ID = "a2acloud-cli"
+from . import platform as _platform
+
+DEFAULT_OAUTH_ISSUER = _platform.oauth_issuer()
+DEFAULT_OAUTH_CLIENT_ID = _platform.oauth_client_id()
 DEFAULT_OAUTH_SCOPE = "openid email offline_access mcp:invoke agent:read"
 DEFAULT_REDIRECT_PORT = 41873
 CALLBACK_PATH = "/callback"

@@ -35,15 +35,15 @@ def _request(
             "query_string": b"",
             "headers": headers,
             "client": ("127.0.0.1", 1234),
-            "server": ("app.a2acloud.io", 443),
+            "server": ("app.example.com", 443),
         }
     )
 
 
 def test_cookie_authenticated_mutation_requires_dashboard_origin(monkeypatch) -> None:
-    monkeypatch.setattr(settings, "dashboard_url", "https://app.a2acloud.io")
+    monkeypatch.setattr(settings, "dashboard_url", "https://app.example.com")
     request = _request(
-        origin="https://evil-agent.a2acloud.io",
+        origin="https://evil-agent.example.com",
         cookie_name=settings.session_cookie_name,
     )
 
@@ -53,12 +53,12 @@ def test_cookie_authenticated_mutation_requires_dashboard_origin(monkeypatch) ->
     assert raised.value.status_code == 403
 
 
-@pytest.mark.parametrize("origin", [None, "null", "https://app.a2acloud.io.evil.test"])
+@pytest.mark.parametrize("origin", [None, "null", "https://app.example.com.evil.test"])
 def test_cookie_authenticated_mutation_rejects_missing_or_lookalike_origin(
     monkeypatch,
     origin,
 ) -> None:
-    monkeypatch.setattr(settings, "dashboard_url", "https://app.a2acloud.io")
+    monkeypatch.setattr(settings, "dashboard_url", "https://app.example.com")
 
     with pytest.raises(HTTPException):
         enforce_browser_session_csrf(
@@ -67,26 +67,26 @@ def test_cookie_authenticated_mutation_rejects_missing_or_lookalike_origin(
 
 
 def test_dashboard_origin_and_referer_are_accepted(monkeypatch) -> None:
-    monkeypatch.setattr(settings, "dashboard_url", "https://app.a2acloud.io")
+    monkeypatch.setattr(settings, "dashboard_url", "https://app.example.com")
     enforce_browser_session_csrf(
         _request(
-            origin="https://app.a2acloud.io",
+            origin="https://app.example.com",
             cookie_name=settings.session_cookie_name,
         )
     )
     enforce_browser_session_csrf(
         _request(
-            referer="https://app.a2acloud.io/workspace",
+            referer="https://app.example.com/workspace",
             cookie_name=settings.session_cookie_name,
         )
     )
 
 
 def test_bearer_and_safe_method_requests_are_exempt(monkeypatch) -> None:
-    monkeypatch.setattr(settings, "dashboard_url", "https://app.a2acloud.io")
+    monkeypatch.setattr(settings, "dashboard_url", "https://app.example.com")
     enforce_browser_session_csrf(
         _request(
-            origin="https://evil-agent.a2acloud.io",
+            origin="https://evil-agent.example.com",
             cookie_name=settings.session_cookie_name,
             authorization="Bearer platform-token",
         )
@@ -94,16 +94,16 @@ def test_bearer_and_safe_method_requests_are_exempt(monkeypatch) -> None:
     enforce_browser_session_csrf(
         _request(
             method="GET",
-            origin="https://evil-agent.a2acloud.io",
+            origin="https://evil-agent.example.com",
             cookie_name=settings.session_cookie_name,
         )
     )
 
 
 def test_legacy_parent_domain_cookie_is_also_protected(monkeypatch) -> None:
-    monkeypatch.setattr(settings, "dashboard_url", "https://app.a2acloud.io")
+    monkeypatch.setattr(settings, "dashboard_url", "https://app.example.com")
 
     with pytest.raises(HTTPException):
         enforce_browser_session_csrf(
-            _request(origin="https://evil-agent.a2acloud.io", cookie_name="a2a_session")
+            _request(origin="https://evil-agent.example.com", cookie_name="a2a_session")
         )

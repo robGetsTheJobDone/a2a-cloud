@@ -21,7 +21,6 @@ from .db import get_session
 from .models import AgentStudioRun, User
 
 _LEGACY_SHARED_COOKIE_NAME = "a2a_session"
-_LEGACY_SHARED_COOKIE_DOMAIN = ".a2acloud.io"
 _UNSAFE_HTTP_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 STUDIO_JOB_TOKEN_TYPE = "agent_studio_job"
 _STUDIO_JOB_SCOPES = frozenset({
@@ -360,7 +359,7 @@ def clear_legacy_session_cookie(response: Response) -> None:
     """Expire the former parent-domain cookie during the host-only migration."""
     response.delete_cookie(
         _LEGACY_SHARED_COOKIE_NAME,
-        domain=_LEGACY_SHARED_COOKIE_DOMAIN,
+        domain=settings.shared_cookie_domain,
         path="/",
         secure=settings.session_cookie_secure,
         httponly=True,

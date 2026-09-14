@@ -76,7 +76,7 @@ def _openid_endpoint(name: str, *, backend: bool = False) -> str:
 
 def _browser_auth_base_url() -> str:
     # Browser auth must stay on the dashboard origin so host-only cookies are
-    # never exposed to user-controlled ``*.a2acloud.io`` agent origins.
+    # never exposed to user-controlled ``*.<platform_domain>`` agent origins.
     return settings.dashboard_url.rstrip("/")
 
 
@@ -149,7 +149,7 @@ def _clear_oidc_state_cookie(response: Response) -> None:
 def _clear_legacy_oidc_state_cookie(response: Response) -> None:
     response.delete_cookie(
         settings.oidc_state_cookie_name,
-        domain=".a2acloud.io",
+        domain=settings.shared_cookie_domain,
         path="/v1/auth/oidc",
         secure=settings.session_cookie_secure,
         httponly=True,

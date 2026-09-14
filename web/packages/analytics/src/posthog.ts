@@ -1,6 +1,6 @@
 export type PostHogConfigOptions = {
   apiKey?: string;
-  /** PostHog ingest host. Defaults to the first-party reverse proxy. */
+  /** PostHog ingest host (or your reverse proxy). Required; analytics are off without it. */
   apiUrl?: string;
   scriptUrl?: string;
   surface: string;
@@ -15,7 +15,6 @@ export type PostHogConfigOptions = {
   fingerprintScriptUrl?: string;
 };
 
-const DEFAULT_API_URL = "https://e.a2acloud.io";
 const DEFAULT_UI_HOST = "https://us.posthog.com";
 const DEFAULT_FINGERPRINT_SCRIPT_URL = "https://openfpcdn.io/fingerprintjs/v4";
 
@@ -31,9 +30,9 @@ export function clientIpFromHeaders(headers: Headers): string {
 
 export function buildPostHogConfigScript(options: PostHogConfigOptions): string {
   const apiKey = options.apiKey?.trim();
-  if (!apiKey) return "window.__a2aAnalyticsDisabled=true;\n";
+  const apiUrl = (options.apiUrl?.trim() || "").replace(/\/$/, "");
+  if (!apiKey || !apiUrl) return "window.__a2aAnalyticsDisabled=true;\n";
 
-  const apiUrl = (options.apiUrl?.trim() || DEFAULT_API_URL).replace(/\/$/, "");
   const config = JSON.stringify({
     apiKey,
     apiUrl,

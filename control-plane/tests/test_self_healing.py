@@ -45,10 +45,10 @@ async def _seed_agent(session: AsyncSession, *, enabled: bool = True) -> Agent:
         name="healing-agent",
         description="Healing test agent",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/healing-agent:latest",
+        image="registry.example.com/agents/healing-agent:latest",
         public=True,
         status="running",
-        url="https://healing-agent.a2acloud.io",
+        url="https://healing-agent.example.com",
         card={
             "version": "0.1.0",
             "capabilities": {

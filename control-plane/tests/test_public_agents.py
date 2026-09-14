@@ -605,7 +605,7 @@ async def test_owner_publish_makes_managed_source_repo_public(
             ).scalar_one()
             agent.public = False
             agent.status = "ready"
-            agent.url = "https://hosted.a2acloud.io"
+            agent.url = "https://hosted.example.com"
             agent.gitea_owner = "owner-1"
             await session.commit()
 

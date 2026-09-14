@@ -1,6 +1,6 @@
 """a2a-pack — developer SDK + CLI for the a2a cloud platform.
 
-See https://docs.a2acloud.io for the full reference.
+See the docs site of your platform (https://docs.<platform-domain>) for the full reference.
 """
 
 # Single source of truth — pyproject.toml reads this via hatch.version.

@@ -323,7 +323,7 @@ def _request(
             "query_string": b"",
             "headers": raw,
             "client": (peer, 1234),
-            "server": ("api.a2acloud.io", 443),
+            "server": ("api.example.com", 443),
         }
     )
 
@@ -602,7 +602,7 @@ def keycloak_realm(monkeypatch):
 
     The only thing stubbed is the JWKS *fetch* - ``keycloak_auth`` caches the
     client, so replacing it hands the verifier this test's public key instead
-    of reaching out to ``auth.a2acloud.io``. Signature, issuer and expiry are
+    of reaching out to ``auth.example.com``. Signature, issuer and expiry are
     all still checked by ``verify_keycloak_token`` itself.
     """
     from control_plane import keycloak_auth
@@ -655,7 +655,7 @@ def test_a_rotated_keycloak_token_cannot_buy_a_fresh_account_budget(
 ) -> None:
     """The blocker from the review, end to end.
 
-    Refresh-token rotation is off in realm ``a2acloud``, so one refresh token
+    Refresh-token rotation is off in the platform realm, so one refresh token
     mints an unbounded stream of access tokens. When the bucket was keyed on
     ``sha256(token)`` that was an unbounded stream of *budgets*: 100 of 100
     calls got through a 20-per-10-minutes ceiling. Keyed on the verified
@@ -1038,7 +1038,7 @@ def test_a_forwarded_hop_with_a_port_still_parses() -> None:
 
 
 def test_hosted_agent_sign_in_buckets_per_agent_not_per_cluster_egress() -> None:
-    """``k8s.py`` injects ``A2A_CP_URL=https://api.a2acloud.io`` into every pod.
+    """``k8s.py`` injects ``A2A_CP_URL=https://api.example.com`` into every pod.
 
     So ``a2a_pack/serve/asgi.py`` posts the visitor's exchange back through the
     public ingress, and every agent on the platform arrives from one egress
@@ -1107,7 +1107,7 @@ async def test_the_audience_key_survives_a_body_with_no_content_length() -> None
             "query_string": b"",
             "headers": [(b"content-type", b"application/json")],
             "client": ("10.0.0.1", 1234),
-            "server": ("api.a2acloud.io", 443),
+            "server": ("api.example.com", 443),
         },
         receive,
     )

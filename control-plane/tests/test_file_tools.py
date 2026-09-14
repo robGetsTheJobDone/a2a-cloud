@@ -86,7 +86,7 @@ class _FakeGiteaBackend:
         ref: str = "main",
         token: str,
         author_name: str = "a2a-cloud",
-        author_email: str = "noreply@a2acloud.io",
+        author_email: str = "noreply@example.com",
         commit_prefix: str = "",
     ) -> None:
         del gitea_url, owner, ref, author_name, author_email, commit_prefix

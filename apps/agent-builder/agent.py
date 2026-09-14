@@ -24,8 +24,6 @@ import re
 from contextlib import suppress
 from typing import Any
 
-from pydantic import BaseModel
-
 import a2a_pack as a2a
 from a2a_pack import (
     A2AAgent,
@@ -35,8 +33,9 @@ from a2a_pack import (
     WorkspaceAccess,
     WorkspaceMode,
 )
-
 from agent_builder import BuilderContext, build_agent_builder
+from agent_builder.tools import platform_domain
+from pydantic import BaseModel
 
 
 class BuilderConfig(BaseModel):
@@ -110,7 +109,7 @@ class AgentBuilder(A2AAgent[BuilderConfig, NoAuth]):
             return {
                 "error": (
                     "no workspace grant; this agent only runs through the "
-                    "a2acloud platform orchestrator (not the local MCP "
+                    "platform orchestrator (not the local MCP "
                     "gateway), because it needs a scoped MinIO bucket and "
                     "a CP JWT to write + deploy your project."
                 ),
@@ -338,7 +337,7 @@ def _find_deploy_url(value: Any, agent_name: str) -> str | None:
 
 
 def _find_agent_url(value: Any, agent_name: str) -> str | None:
-    expected = f"https://{agent_name}.a2acloud.io"
+    expected = f"https://{agent_name}.{platform_domain()}"
     if value is None:
         return None
     if isinstance(value, dict):

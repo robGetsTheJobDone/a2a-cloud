@@ -146,7 +146,7 @@ async def test_provision_adopts_verified_email_over_placeholder() -> None:
     try:
         async with Session() as session:
             user = await provision_user_from_claims(session, {"sub": "kc-late-email"})
-            assert user.email.endswith("@keycloak.a2acloud.io")
+            assert user.email.endswith("@keycloak.example.com")
 
             user = await provision_user_from_claims(
                 session,

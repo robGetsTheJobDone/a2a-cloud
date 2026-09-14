@@ -203,14 +203,23 @@ app = FastAPI(
     # Everything else short-circuits on a dict lookup.
     dependencies=[Depends(rate_limit_guard)],
 )
+def _dashboard_origins() -> list[str]:
+    """http and https origins of the configured dashboard URL."""
+    from urllib.parse import urlparse
+
+    host = urlparse(str(settings.dashboard_url)).netloc
+    if not host:
+        return []
+    return [f"http://{host}", f"https://{host}"]
+
+
 app.add_middleware(
     CORSMiddleware,
     # Vite dev server + the deployed dashboard origin. Tighten in prod.
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://app.a2acloud.io",
-        "https://app.a2acloud.io",
+        *_dashboard_origins(),
     ],
     allow_credentials=True,
     allow_methods=["*"],

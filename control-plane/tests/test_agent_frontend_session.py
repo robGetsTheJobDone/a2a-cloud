@@ -1,6 +1,6 @@
 """The agent-origin session gateway.
 
-Hosted agents run user-controlled code on ``<name>.a2acloud.io``. The whole
+Hosted agents run user-controlled code on ``<name>.example.com``. The whole
 point of this gateway is that an agent learns *who is visiting it* without ever
 holding a credential that works anywhere else, so these tests are mostly about
 what the scoped token must NOT be able to do.

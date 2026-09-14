@@ -184,7 +184,7 @@ a2a build [OPTIONS]
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `--project`, `-p` | PATH | no | . |  |
-| `--registry` | TEXT | no | registry.a2acloud.io |  |
+| `--registry` | TEXT | no | — | Image registry host (default: registry.<platform domain>) |
 | `--push` | BOOLEAN | no | False | Also push the built image |
 
 ## `a2a call`
@@ -265,7 +265,7 @@ a2a deploy [OPTIONS] [PROJECT]
 | --- | --- | --- | --- | --- |
 | `PROJECT` | PATH | no | — | Project directory containing a2a.yaml |
 | `--project`, `-p` | PATH | no | . |  |
-| `--public`, `--private` | BOOLEAN | no | — | List/unlist the agent in the public registry at a2acloud.io. Defaults to `expose.public` from a2a.yaml; with no such key the agent keeps its current listing, and a brand-new agent is unlisted. |
+| `--public`, `--private` | BOOLEAN | no | — | List/unlist the agent in the platform's public registry. Defaults to `expose.public` from a2a.yaml; with no such key the agent keeps its current listing, and a brand-new agent is unlisted. |
 | `--wait`, `--no-wait` | BOOLEAN | no | True | Poll until URL is live |
 | `--api` | TEXT | no | — | Override control plane URL |
 
@@ -496,7 +496,7 @@ a2a openapi generate [OPTIONS] [URL]
 | `--name`, `-n` | TEXT | no | — | Registry slug to generate |
 | `--description`, `-d` | TEXT | no | — |  |
 | `--base-url` | TEXT | no | — | Override the API server URL |
-| `--public`, `--private` | BOOLEAN | no | — | List the generated agent in the public registry at a2acloud.io. Generated agents start unlisted. |
+| `--public`, `--private` | BOOLEAN | no | — | List the generated agent in the platform's public registry. Generated agents start unlisted. |
 | `--api` | TEXT | no | — |  |
 
 ## `a2a openapi preview`

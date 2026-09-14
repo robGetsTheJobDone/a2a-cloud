@@ -43,10 +43,10 @@ async def _seed_agent(session: AsyncSession) -> Agent:
         name="invoice-bot",
         description="Invoice bot",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         public=True,
         status="running",
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={
             "template_lineage": {
                 "template_ref": "a2acloud/templates/invoice-bot",

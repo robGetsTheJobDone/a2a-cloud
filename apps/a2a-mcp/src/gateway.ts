@@ -1,6 +1,6 @@
 /**
  * MCP gateway server. Fans out tools/list and tools/call to each enabled
- * upstream agent (deployed on a2acloud). Tool names are prefixed with the
+ * upstream agent (deployed on the platform). Tool names are prefixed with the
  * agent slug so multiple agents can coexist in one MCP namespace.
  *
  * Naming: ``{agent}__{skill}``. Double underscore separator. Skill names

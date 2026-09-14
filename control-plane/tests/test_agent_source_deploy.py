@@ -41,10 +41,10 @@ async def test_deploy_agent_source_uses_current_repo_head_and_manual_trigger(
             name="invoice-bot",
             description="Invoice bot",
             version="0.1.0",
-            image="registry.a2acloud.io/agents/invoice-bot:latest",
+            image="registry.example.com/agents/invoice-bot:latest",
             public=True,
             status="running",
-            url="https://invoice-bot.a2acloud.io",
+            url="https://invoice-bot.example.com",
             card={},
             gitea_owner="a2a-acme",
         )

@@ -1,6 +1,6 @@
 # a2amcp
 
-MCP gateway for a2acloud agents. It runs locally as a stdio MCP server and
+MCP gateway for A2A Cloud agents. It runs locally as a stdio MCP server and
 exposes deployed A2A agents as tools to Claude Code, Cursor, and other MCP
 clients.
 
@@ -9,15 +9,29 @@ OAuth MCP connector endpoints used by ChatGPT/Claude web connectors:
 
 ```text
 Local stdio gateway:        npx -y a2amcp
-Remote standard MCP:        https://<agent>.a2acloud.io/mcp
-Remote connector MCP:       https://<agent>.a2acloud.io/connector-mcp
-Remote orchestrator MCP:    https://api.a2acloud.io/connector-mcp
+Remote standard MCP:        https://<agent>.<platform-domain>/mcp
+Remote connector MCP:       https://<agent>.<platform-domain>/connector-mcp
+Remote orchestrator MCP:    https://api.<platform-domain>/connector-mcp
 ```
 
 Use `a2amcp` for editor clients that launch a local MCP server process. Use the
 remote `/connector-mcp` URL for hosted connector UIs that need OAuth login,
 Dynamic Client Registration, async job polling, and structured approval/input
 interrupts.
+
+## Pointing at your own platform
+
+By default the gateway talks to the hosted a2a cloud instance. For a
+self-hosted platform set one of:
+
+```bash
+export A2A_PLATFORM_DOMAIN=example.com   # api.example.com, auth.example.com
+export A2A_API_URL=https://api.example.com   # or the control plane URL directly
+export A2A_OAUTH_ISSUER=https://auth.example.com/realms/a2acloud
+```
+
+`a2amcp login --api <url> --issuer <url>` overrides these per invocation, and a
+saved `~/.a2a/credentials.json` from `a2a login` wins over the defaults.
 
 ## Quickstart
 
@@ -86,8 +100,8 @@ ChatGPT and Claude-style hosted connectors should not run this stdio gateway.
 Configure them directly with the remote connector URL:
 
 ```text
-https://api.a2acloud.io/connector-mcp
-https://<agent>.a2acloud.io/connector-mcp
+https://api.<platform-domain>/connector-mcp
+https://<agent>.<platform-domain>/connector-mcp
 ```
 
 Choose OAuth authentication. The server advertises protected-resource metadata,

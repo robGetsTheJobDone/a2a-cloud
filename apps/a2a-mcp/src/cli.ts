@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `a2amcp` — install once, expose any number of a2acloud agents to your MCP
+ * `a2amcp` — install once, expose any number of deployed A2A agents to your MCP
  * client (Claude Code, Cursor, etc.).
  *
  * No-argument invocation runs the gateway over stdio. That's the form an MCP
@@ -42,7 +42,7 @@ const program = new Command();
 
 program
   .name("a2amcp")
-  .description("MCP gateway for a2acloud agents.")
+  .description("MCP gateway for A2A Cloud agents.")
   .version(pkg.version);
 
 async function client(apiOverride?: string): Promise<ControlPlaneClient> {

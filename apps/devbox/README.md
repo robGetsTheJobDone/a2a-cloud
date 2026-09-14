@@ -13,7 +13,7 @@ serves the pod's HTTP port. An OpenSSH client reaches it through the existing
 HTTPS ingress via a `ProxyCommand` (`a2a ssh-proxy`, shipped in the CLI):
 
 ```
-ssh client ──stdio──> a2a ssh-proxy ──wss://<agent>-devbox.a2acloud.io/ssh──> bridge ──tcp──> 127.0.0.1:22 (sshd)
+ssh client ──stdio──> a2a ssh-proxy ──wss://<agent>-devbox.<platform-domain>/ssh──> bridge ──tcp──> 127.0.0.1:22 (sshd)
 ```
 
 Because it's a standard `ProxyCommand`, VS Code Remote-SSH, Cursor, JetBrains

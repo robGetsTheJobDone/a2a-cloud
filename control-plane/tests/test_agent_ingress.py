@@ -53,7 +53,7 @@ async def gateway_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async with Session() as session:
-        owner = User(email="gateway-owner@example.com", password_hash="hash")
+        owner = User(email="gateway-owner@customer.test", password_hash="hash")
         session.add(owner)
         await session.flush()
         public = Agent(
@@ -61,10 +61,10 @@ async def gateway_db():
             name="research-agent",
             description="",
             version="1.2.3",
-            image="registry.a2acloud.io/agents/research-agent:latest",
+            image="registry.example.com/agents/research-agent:latest",
             public=True,
             status="running",
-            url="https://research-agent.a2acloud.io",
+            url="https://research-agent.example.com",
             card={
                 "version": "1.2.3",
                 "skills": [
@@ -99,7 +99,7 @@ async def gateway_db():
             name="private-agent",
             description="",
             version="1.0.0",
-            image="registry.a2acloud.io/agents/private-agent:latest",
+            image="registry.example.com/agents/private-agent:latest",
             public=False,
             status="running",
             url=None,
@@ -112,7 +112,7 @@ async def gateway_db():
                 agent_id=public.id,
                 user_id=owner.id,
                 agent_name=public.name,
-                hostname="agent.example.com",
+                hostname="agent.customer.test",
                 verification_token="verified-token",
                 status="active",
             )
@@ -256,9 +256,9 @@ async def test_concurrency_bulkhead_isolates_each_agent_and_the_process() -> Non
 async def test_resolves_hosted_agents_and_active_custom_hosts(gateway_db) -> None:
     Session, _ = gateway_db
 
-    canonical = await _resolve_public_agent("research-agent.a2acloud.io:443", Session)
-    custom = await _resolve_public_agent("agent.example.com", Session)
-    private = await _resolve_public_agent("private-agent.a2acloud.io", Session)
+    canonical = await _resolve_public_agent("research-agent.example.com:443", Session)
+    custom = await _resolve_public_agent("agent.customer.test", Session)
+    private = await _resolve_public_agent("private-agent.example.com", Session)
     malicious = await _resolve_public_agent("research-agent.attacker.test", Session)
 
     assert canonical is not None and canonical.name == "research-agent"
@@ -274,13 +274,13 @@ async def test_active_custom_domain_is_preserved_for_application_routing(gateway
     seen_hosts: list[str] = []
     client, upstream_client = await _gateway_client(Session, persisted, seen_hosts)
     try:
-        response = await client.get("/healthz", headers={"Host": "agent.example.com"})
+        response = await client.get("/healthz", headers={"Host": "agent.customer.test"})
     finally:
         await client.aclose()
         await upstream_client.aclose()
 
     assert response.status_code == 200
-    assert response.json()["host"] == "agent.example.com"
+    assert response.json()["host"] == "agent.customer.test"
     assert seen_hosts == ["research-agent.agents.svc.cluster.local"]
 
 
@@ -294,7 +294,7 @@ async def test_runtime_declared_raw_endpoint_execution_is_signed(gateway_db) -> 
         response = await client.post(
             "/telegram/webhook?source=bot",
             headers={
-                "Host": "research-agent.a2acloud.io",
+                "Host": "research-agent.example.com",
                 "Authorization": "Bearer webhook-secret",
             },
             json={"message": {"text": "hello"}},
@@ -323,7 +323,7 @@ async def test_direct_invoke_returns_platform_signed_redacted_evidence(gateway_d
         response = await client.post(
             "/invoke/echo",
             headers={
-                "Host": "research-agent.a2acloud.io",
+                "Host": "research-agent.example.com",
                 "Authorization": "Bearer opaque-agent-key",
             },
             json={
@@ -394,7 +394,7 @@ async def test_non_json_response_still_hands_the_caller_its_signed_evidence(
     try:
         response = await client.post(
             "/report.csv",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"window": "7d"},
         )
     finally:
@@ -424,12 +424,12 @@ async def test_mcp_tools_call_is_signed_but_discovery_is_not(gateway_db) -> None
     try:
         listed = await client.post(
             "/mcp",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
         )
         called = await client.post(
             "/mcp",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={
                 "jsonrpc": "2.0",
                 "id": 2,
@@ -468,7 +468,7 @@ async def test_mcp_sse_strips_nested_untrusted_evidence(gateway_db) -> None:
         response = await client.post(
             "/mcp",
             headers={
-                "Host": "research-agent.a2acloud.io",
+                "Host": "research-agent.example.com",
                 "Accept": "text/event-stream",
             },
             json={
@@ -497,7 +497,7 @@ async def test_mcp_tool_error_is_signed_as_error(gateway_db) -> None:
     try:
         response = await client.post(
             "/mcp",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={
                 "jsonrpc": "2.0",
                 "id": 5,
@@ -526,7 +526,7 @@ async def test_sse_stream_keeps_progress_and_replaces_untrusted_evidence(gateway
         response = await client.post(
             "/invoke/stream",
             headers={
-                "Host": "research-agent.a2acloud.io",
+                "Host": "research-agent.example.com",
                 "Accept": "text/event-stream",
             },
             json={"arguments": {"topic": "proof"}},
@@ -569,7 +569,7 @@ async def test_oversized_sse_frame_fails_closed_with_signed_error(
         response = await client.post(
             "/invoke/stream",
             headers={
-                "Host": "research-agent.a2acloud.io",
+                "Host": "research-agent.example.com",
                 "Accept": "text/event-stream",
             },
             json={"arguments": {}},
@@ -594,7 +594,7 @@ async def test_encoded_structured_response_fails_closed_with_signed_evidence(gat
     try:
         response = await client.post(
             "/invoke/encoded",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"arguments": {}},
         )
     finally:
@@ -622,7 +622,7 @@ async def test_oversized_execution_response_fails_closed_with_signed_evidence(
     try:
         response = await client.post(
             "/invoke/echo",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"arguments": {"payload": "x" * 128}},
         )
     finally:
@@ -644,7 +644,7 @@ async def test_private_platform_host_routes_but_untrusted_host_does_not(gateway_
     client, upstream_client = await _gateway_client(Session, persisted, seen_hosts)
     try:
         private = await client.get(
-            "/healthz", headers={"Host": "private-agent.a2acloud.io"}
+            "/healthz", headers={"Host": "private-agent.example.com"}
         )
         attacker = await client.get(
             "/healthz", headers={"Host": "research-agent.attacker.test"}
@@ -673,12 +673,12 @@ async def test_missing_signer_fails_before_execution(
         liveness = await client.get("/__gateway/livez")
         response = await client.post(
             "/invoke/echo",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"arguments": {"text": "must not run"}},
         )
         raw_response = await client.post(
             "/telegram/webhook",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"message": {"text": "must not run"}},
         )
     finally:
@@ -707,12 +707,12 @@ async def test_missing_signer_does_not_block_mcp_discovery(
     try:
         listed = await client.post(
             "/mcp",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
         )
         called = await client.post(
             "/mcp",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={
                 "jsonrpc": "2.0",
                 "id": 2,
@@ -747,7 +747,7 @@ async def test_mcp_does_not_claim_client_supplied_grant_provenance(
         response = await client.post(
             "/mcp",
             headers={
-                "Host": "research-agent.a2acloud.io",
+                "Host": "research-agent.example.com",
                 "Authorization": f"Bearer {token}",
             },
             json={
@@ -787,7 +787,7 @@ async def test_invoke_records_grant_consumed_from_execution_body(gateway_db) -> 
     try:
         response = await client.post(
             "/invoke/echo",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             json={"arguments": {"text": "hello"}, "grant": token},
         )
     finally:
@@ -813,7 +813,7 @@ async def test_oversized_mcp_envelope_is_rejected_before_it_can_evade_classifica
     try:
         response = await client.post(
             "/mcp",
-            headers={"Host": "research-agent.a2acloud.io"},
+            headers={"Host": "research-agent.example.com"},
             content=json.dumps(
                 {
                     "jsonrpc": "2.0",

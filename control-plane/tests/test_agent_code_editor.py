@@ -42,10 +42,10 @@ async def _seed_agent(
         name=name,
         description="Invoice bot",
         version="0.1.0",
-        image=image or f"registry.a2acloud.io/agents/{name}:latest",
+        image=image or f"registry.example.com/agents/{name}:latest",
         public=True,
         status="running",
-        url=f"https://{name}.a2acloud.io",
+        url=f"https://{name}.example.com",
         card={},
         gitea_owner=gitea_owner,
     )

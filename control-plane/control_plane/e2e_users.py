@@ -14,7 +14,7 @@ from .db import SessionLocal, init_models
 from .models import User
 from .org_provisioning import create_personal_organization
 
-DEFAULT_E2E_EMAIL = "kernel-sim-e2e@a2acloud.test"
+DEFAULT_E2E_EMAIL = "kernel-sim-e2e@e2e.test"
 
 
 async def ensure_e2e_user_token(

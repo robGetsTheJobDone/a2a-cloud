@@ -116,7 +116,7 @@ def test_current_a2a_pack_version_reads_card_capabilities() -> None:
 def test_runtime_upgrade_status_treats_missing_version_as_stale() -> None:
     status = runtime_upgrade_status(
         name="invoice-bot",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         card={},
         latest_version="0.1.2",
     )
@@ -258,7 +258,7 @@ def test_bump_agent_runtime_repo_restamps_and_pushes(tmp_path: Path) -> None:
     )
 
     _git(tmp_path, "clone", "--branch", "main", str(runtime_bare), str(runtime_clone))
-    marker = json.loads((runtime_clone / ".a2acloud" / "runtime-upgrade.json").read_text())
+    marker = json.loads((runtime_clone / ".a2a-platform" / "runtime-upgrade.json").read_text())
     workflow = (runtime_clone / ".gitea" / "workflows" / "build.yml").read_text()
     dockerfile = (runtime_clone / "Dockerfile").read_text()
     assert marker["target_version"] == "0.1.2"
@@ -269,7 +269,7 @@ def test_bump_agent_runtime_repo_restamps_and_pushes(tmp_path: Path) -> None:
     assert f'IMAGE_TAG: "{image_tag}"' in workflow
     assert "docker build --pull -f Dockerfile" in workflow
     assert 'docker push "$IMG:$IMAGE_TAG"' in workflow
-    assert "FROM registry.a2acloud.io/a2a/a2a-pack-base:0.1.2" in dockerfile
+    assert "FROM registry.example.com/a2a/a2a-pack-base:0.1.2" in dockerfile
     assert sha == _git(seed, "ls-remote", str(runtime_bare), "refs/heads/main").split()[0]
 
 
@@ -309,7 +309,7 @@ def test_bump_agent_runtime_repo_supports_legacy_source_without_dsl(
     _git(tmp_path, "clone", "--branch", "main", str(runtime_bare), str(runtime_clone))
     dockerfile = (runtime_clone / "Dockerfile").read_text()
     deployment = (runtime_clone / "deploy" / "20-deployment.yaml").read_text()
-    assert "FROM registry.a2acloud.io/a2a/a2a-pack-base:0.1.2" in dockerfile
+    assert "FROM registry.example.com/a2a/a2a-pack-base:0.1.2" in dockerfile
     assert "ENV A2A_ENTRYPOINT=agent:LegacyBot" in dockerfile
     assert "A2A_DSL_PATH" not in dockerfile
     assert "timeoutSeconds: 1800" in deployment

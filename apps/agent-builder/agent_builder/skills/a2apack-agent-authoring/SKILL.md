@@ -233,7 +233,7 @@ public, caller-pays agent is a page anyone may view whose skills still require
 sign-in.** Design for that state; do not assume a viewer is authenticated.
 
 Never send the visitor to `config.auth.loginUrl` yourself. Agents live on
-`<name>.a2acloud.io` and the dashboard session cookie is host-locked to the
+`<name>.<platform-domain>` and the dashboard session cookie is host-locked to the
 dashboard, so a bare login redirect signs the user in somewhere else and
 returns them here still signed out — an infinite bounce. Use
 `config.auth.authorizeUrl`, the platform gateway that hands this origin its own

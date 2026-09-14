@@ -765,7 +765,7 @@ class TemplateInitTests(unittest.TestCase):
                     "source_sha": "source-head",
                     "deployment": {
                         "status": "building",
-                        "agent_url": "https://demo-agent.a2acloud.io",
+                        "agent_url": "https://demo-agent.example.com",
                     },
                 }
 
@@ -838,7 +838,7 @@ class TemplateInitTests(unittest.TestCase):
                     "source_sha": "c" * 40,
                     "deployment": {
                         "status": "building",
-                        "agent_url": "https://demo-agent.a2acloud.io",
+                        "agent_url": "https://demo-agent.example.com",
                     },
                 }
 
@@ -1137,17 +1137,17 @@ class TemplateInitTests(unittest.TestCase):
     def test_deploy_poll_url_falls_back_to_private_canonical_route(self) -> None:
         self.assertEqual(
             _deploy_poll_url({"url": None}, "private-agent"),
-            "https://private-agent.a2acloud.io",
+            "https://private-agent.example.com",
         )
         self.assertEqual(
             _deploy_poll_url(
                 {
-                    "expected_url": "https://expected.a2acloud.io",
-                    "url": "https://public.a2acloud.io",
+                    "expected_url": "https://expected.example.com",
+                    "url": "https://public.example.com",
                 },
                 "private-agent",
             ),
-            "https://expected.a2acloud.io",
+            "https://expected.example.com",
         )
 
 
@@ -1346,7 +1346,7 @@ class _FakeAsyncClient:
                 "name": payload["name"],
                 "version": payload["version"],
                 "status": "building",
-                "expected_url": "https://report-meta.a2acloud.io",
+                "expected_url": "https://report-meta.example.com",
                 "deployment_id": "dpl_123",
                 "head_sha": "source-sha",
                 "preview": {"skills": ["pursue"]},

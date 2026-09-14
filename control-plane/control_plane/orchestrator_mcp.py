@@ -81,7 +81,7 @@ class _McpChatJob:
 class ControlPlaneOrchestratorAgent(A2AAgent[Any, NoAuth]):
     """Expose the platform orchestrator as a single authenticated MCP tool."""
 
-    name = "a2acloud-control-plane-orchestrator"
+    name = "a2a-control-plane-orchestrator"
     description = (
         "Run the authenticated user's A2A Cloud control-plane orchestrator. "
         "The orchestrator can inspect the user's workspace, discover agents, "

@@ -60,7 +60,7 @@ def test_orchestrator_mcp_serves_oauth_protected_resource_metadata(monkeypatch) 
     body = response.json()
     assert body["resource"] == "https://testserver"
     assert body["authorization_servers"] == [
-        "https://auth.a2acloud.io/realms/a2acloud"
+        "https://auth.example.com/realms/a2a"
     ]
     assert "mcp:invoke" in body["scopes_supported"]
     assert "orchestrator:run" in body["scopes_supported"]

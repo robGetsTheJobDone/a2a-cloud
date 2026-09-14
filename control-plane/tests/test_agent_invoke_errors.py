@@ -36,7 +36,7 @@ class _Request:
         self._body = body
         self.headers = {
             "host": "internal.svc.cluster.local",
-            "x-forwarded-host": "app.a2acloud.io",
+            "x-forwarded-host": "app.example.com",
             "x-forwarded-proto": "https",
         }
 
@@ -86,7 +86,7 @@ async def _seed(session):
         image="registry.example/reporter:latest",
         public=True,
         status="running",
-        url="https://reporter.a2acloud.io",
+        url="https://reporter.example.com",
         card={
             "runtime": {"llm_provisioning": "caller_provided"},
             "skills": [{"name": "build_report", "input_schema": {"type": "object"}}],

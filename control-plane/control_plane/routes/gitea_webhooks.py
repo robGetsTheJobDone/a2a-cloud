@@ -35,7 +35,7 @@ router = APIRouter(
 
 _ZERO_SHA = "0" * 40
 _PLATFORM_SOURCE_EDIT_COMMIT_PREFIXES = ("a2a-source-edit:", "[a2a-source-edit]")
-_PLATFORM_SOURCE_EDIT_EMAILS = {"platform@a2a.local", "noreply@a2acloud.io"}
+_PLATFORM_SOURCE_EDIT_EMAILS = {"platform@a2a.local", f"noreply@{settings.platform_domain}"}
 
 
 @router.post("/source-push")
@@ -282,7 +282,7 @@ async def _expected_runtime_image(
     if _is_pinned_managed_agent_image(image, agent.name):
         return image
     if head_sha and _is_managed_agent_image(image, agent.name):
-        return f"registry.a2acloud.io/agents/{agent.name}:{head_sha}"
+        return settings.agent_image(agent.name, head_sha)
     return image or None
 
 
@@ -308,7 +308,7 @@ async def _recorded_expected_image(
 def _is_pinned_managed_agent_image(image: str | None, agent_name: str) -> bool:
     if not image:
         return False
-    prefix = f"registry.a2acloud.io/agents/{agent_name}:"
+    prefix = settings.agent_image_prefix(agent_name)
     if not image.startswith(prefix):
         return False
     return image.removeprefix(prefix) != "latest"
@@ -317,7 +317,7 @@ def _is_pinned_managed_agent_image(image: str | None, agent_name: str) -> bool:
 def _is_managed_agent_image(image: str | None, agent_name: str) -> bool:
     if not image:
         return False
-    prefix = f"registry.a2acloud.io/agents/{agent_name}:"
+    prefix = settings.agent_image_prefix(agent_name)
     return image.startswith(prefix)
 
 

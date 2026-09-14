@@ -309,7 +309,7 @@ async def test_compose_agent_route_generates_and_deploys(monkeypatch) -> None:
             assert sandbox_calls[0]["json"]["bucket"] == "agent-launch-meta"
             assert (
                 sandbox_calls[0]["json"]["image"]
-                == "registry.a2acloud.io/a2a/a2a-pack-base:0.1.92"
+                == "registry.example.com/a2a/a2a-pack-base:0.1.92"
             )
 
             source_event = (

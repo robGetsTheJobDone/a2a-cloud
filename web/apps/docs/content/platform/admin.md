@@ -66,3 +66,18 @@ legal classification or an organization's accountable human decision.
 
 See the [Control-plane API guide](/platform/api) for automation and the
 [complete API inventory](/reference/control-plane-api) for every route.
+
+## Self-hosted configuration
+
+Every hosted URL the web surfaces render is derived from one platform domain
+so a self-hosted install never points at another deployment:
+
+| Surface | Variable | Derives |
+| --- | --- | --- |
+| Dashboard (build time) | `VITE_A2A_PLATFORM_DOMAIN` (else `window.location.host` minus `app.`) | `<agent>.<domain>`, `api.<domain>`, `docs.<domain>`, `auth.<domain>`; override with `VITE_A2A_API_URL`, `VITE_A2A_DOCS_URL`, `VITE_A2A_AUTH_URL` |
+| Admin console | `A2A_PLATFORM_DOMAIN` | `api.`, `app.`, `gitea.`, `registry.`, `argocd.`, `grafana.`, `auth.`; override with `A2A_API_URL`, `A2A_DASHBOARD_URL`, `A2A_GITEA_URL`, `A2A_REGISTRY_HOST`, `A2A_ARGOCD_URL`, `A2A_GRAFANA_URL` |
+| Meta-agents (builder, studio, reviewer, code editor) | `A2A_PLATFORM_DOMAIN` | agent URLs, docs links (`A2A_DOCS_URL`), Gitea (`A2A_GITEA_PUBLIC`), code-editor target (`A2A_CODE_EDITOR_AGENT_URL`) |
+| `a2amcp` gateway | `A2A_PLATFORM_DOMAIN`, `A2A_API_URL`, `A2A_OAUTH_ISSUER` | defaults to the hosted instance when unset |
+| Dashboard analytics | `POSTHOG_KEY` + `POSTHOG_API_URL` | analytics stay off unless both are set |
+
+The control plane uses `A2A_CP_PLATFORM_DOMAIN` for the same purpose.

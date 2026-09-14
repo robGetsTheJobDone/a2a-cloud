@@ -125,10 +125,10 @@ def _agent_row(
         name=name,
         description="",
         version="1.0.0",
-        image=f"registry.a2acloud.io/agents/{name}:latest",
+        image=f"registry.example.com/agents/{name}:latest",
         public=public,
         status="running",
-        url=f"https://{name}.a2acloud.io",
+        url=f"https://{name}.example.com",
         card={"skills": [{"name": "search"}]},
         organization_id=org_id,
     )
@@ -1885,8 +1885,8 @@ async def seed_proof_run(
             card_hash="card-hash-abc",
             repo_url="https://PROOF_REPO_CREDENTIAL_DO_NOT_LEAK@gitea.example/r.git",
             head_sha="feedface",
-            image=f"registry.a2acloud.io/agents/{agent_name}:latest",
-            agent_url=f"https://{agent_name}.a2acloud.io",
+            image=f"registry.example.com/agents/{agent_name}:latest",
+            agent_url=f"https://{agent_name}.example.com",
             elapsed_ms=1234,
         )
         session.add(run)
@@ -2171,7 +2171,7 @@ async def test_principal_dependent_proof_routes_are_not_cached_by_url_alone(
     existed, so a cache keyed on the URL was correct for them. It no longer is,
     and there is a real shared cache on this path: public site fetchers fetch
     ``/v1/public/agent-proofs`` through Next's data cache with
-    ``revalidate: 300``, shared across every visitor of a2acloud.io. Without
+    ``revalidate: 300``, shared across every visitor of example.com. Without
     these headers an owner's full record could be stored under the bare URL and
     replayed to strangers — the original bug, reintroduced by a cache instead
     of by a serializer.

@@ -401,12 +401,12 @@ def _send_digest_email(
     smtp_user = os.environ.get("A2A_CP_STUDIO_SMTP_USER", "").strip()
     password = os.environ.get("A2A_CP_STUDIO_SMTP_PASSWORD", "")
     sender = os.environ.get(
-        "A2A_CP_STUDIO_SMTP_FROM", "a2a cloud <hello@a2acloud.io>"
+        "A2A_CP_STUDIO_SMTP_FROM", f"a2a cloud <hello@{settings.platform_domain}>"
     ).strip()
     if not host or not sender or bool(smtp_user) != bool(password):
         log.error("Agent Studio autopilot email is not configured")
         return False
-    dashboard = os.environ.get("A2A_CP_DASHBOARD_URL", "https://app.a2acloud.io").rstrip("/")
+    dashboard = str(settings.dashboard_url).rstrip("/")
     text_blocks: list[str] = []
     html_blocks: list[str] = []
     for proposal in proposals:

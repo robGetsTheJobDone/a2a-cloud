@@ -59,7 +59,7 @@ Show detected auth requirements and configured connections.
 ## `build`  *(function)*
 
 ```python
-build(project: 'Path', registry: 'str', push: 'bool') -> 'None'
+build(project: 'Path', registry: 'str | None', push: 'bool') -> 'None'
 ```
 
 Build (and optionally push) the container image for the agent.

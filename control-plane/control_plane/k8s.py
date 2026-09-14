@@ -331,7 +331,7 @@ def render_manifests(
         return docs
 
     # Knative scales user agents to zero by default. Public agents get the
-    # auto-assigned ``{name}.a2acloud.io`` route via the cluster domain
+    # auto-assigned ``{name}.<platform_domain>`` route via the cluster domain
     # template; private agents are kept cluster-local. Edge TLS/routing to
     # kourier is wired separately (rollout/backfill task).
     labels = {
@@ -786,7 +786,7 @@ def _sync_custom_domain_ingress_once(name: str, routes: list[Any]) -> None:
         return
 
     _sync_custom_domain_https_redirect_middleware(name)
-    # Older routes rewrote Host to <agent>.a2acloud.io so Knative could select
+    # Older routes rewrote Host to <agent>.<platform_domain> so Knative could select
     # the workload directly. The trusted gateway must receive the verified
     # custom Host so it can resolve that active domain and preserve it for the
     # application. Reconcile away any legacy rewrite before replacing ingress.

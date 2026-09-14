@@ -51,7 +51,7 @@ class FakeGraph:
         yield {
             "event": "on_tool_end",
             "name": "cp_deploy_tarball",
-            "data": {"output": {"url": "https://generated-agent.a2acloud.io"}},
+            "data": {"output": {"url": "https://generated-agent.example.com"}},
         }
         yield {
             "event": "on_chain_end",
@@ -59,7 +59,7 @@ class FakeGraph:
             "data": {
                 "output": {
                     "messages": [
-                        {"content": ("Deployed at https://generated-agent.a2acloud.io")}
+                        {"content": ("Deployed at https://generated-agent.example.com")}
                     ]
                 }
             },
@@ -76,7 +76,7 @@ class FakePlanLimitGraph:
                     "error": "cp 403",
                     "detail": (
                         '{"detail":{"error":"agent_limit","feature":"agents",'
-                        '"help_url":"https://app.a2acloud.io/settings"}}'
+                        '"help_url":"https://app.example.com/settings"}}'
                     ),
                 }
             },
@@ -90,7 +90,7 @@ class FakePlanLimitGraph:
                         {
                             "content": (
                                 "Deployment failed. See: "
-                                "https://app.a2acloud.io/settings"
+                                "https://app.example.com/settings"
                             )
                         }
                     ]
@@ -125,11 +125,11 @@ class AgentBuilderBuildTests(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertEqual(result["ok"], True)
-        self.assertEqual(result["url"], "https://generated-agent.a2acloud.io")
+        self.assertEqual(result["url"], "https://generated-agent.example.com")
         self.assertIn(
-            "Deployed at https://generated-agent.a2acloud.io", result["reply"]
+            "Deployed at https://generated-agent.example.com", result["reply"]
         )
-        self.assertIn("deployed: https://generated-agent.a2acloud.io", ctx.progress)
+        self.assertIn("deployed: https://generated-agent.example.com", ctx.progress)
 
     async def test_build_does_not_treat_help_url_as_deployed_agent(self) -> None:
         ctx = FakeRunContext()
@@ -145,7 +145,7 @@ class AgentBuilderBuildTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["ok"], False)
         self.assertNotIn("url", result)
         self.assertIn("no live URL was found", result["warning"])
-        self.assertNotIn("deployed: https://app.a2acloud.io/settings", ctx.progress)
+        self.assertNotIn("deployed: https://app.example.com/settings", ctx.progress)
 
 
 class BuilderPromptTests(unittest.TestCase):
@@ -291,7 +291,7 @@ class BuilderPromptTests(unittest.TestCase):
         self.assertIn("/app/config.json", SYSTEM_PROMPT)
         self.assertIn("/app/a2a-client.js", SYSTEM_PROMPT)
         self.assertIn(
-            "https://docs.a2acloud.io/concepts/packed-frontends", SYSTEM_PROMPT
+            "https://docs.example.com/concepts/packed-frontends", SYSTEM_PROMPT
         )
         self.assertIn("frontend/src/App.jsx", SYSTEM_PROMPT)
         self.assertIn("unwrapInvokeResponse(payload)", SYSTEM_PROMPT)

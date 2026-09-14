@@ -106,7 +106,7 @@ def runtime_upgrade_status(
     latest = latest_version or latest_a2a_pack_version()
     current = current_a2a_pack_version(card)
     update_available = current is None or _compare_versions(current, latest) < 0
-    managed_image = image.startswith(f"registry.a2acloud.io/agents/{name}:")
+    managed_image = image.startswith(settings.agent_image_prefix(name))
     if current is None:
         message = "Agent does not report an a2a-pack version yet."
     elif update_available:
@@ -147,7 +147,7 @@ def bump_agent_runtime_repo(
         image_tag=deploy_image_tag,
         base_image_tag=base_image_tag,
         extra_files={
-            ".a2acloud/runtime-upgrade.json": json.dumps(
+            ".a2a-platform/runtime-upgrade.json": json.dumps(
                 {
                     "package": A2A_PACK_PACKAGE,
                     "target_version": latest,

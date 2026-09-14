@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 # Pinned to the image built from apps/devbox/Dockerfile. Override for
 # staging/tests via A2A_CP_DEVBOX_IMAGE.
 DEVBOX_IMAGE = os.environ.get(
-    "A2A_CP_DEVBOX_IMAGE", "registry.a2acloud.io/a2a/a2a-devbox:latest"
+    "A2A_CP_DEVBOX_IMAGE", f"{settings.image_registry}/a2a/a2a-devbox:latest"
 )
 _IMAGE_DIGEST_RE = re.compile(r"^\S+@sha256:[0-9a-f]{64}$")
 DEVBOX_PORT = 8000

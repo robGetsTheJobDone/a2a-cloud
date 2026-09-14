@@ -20,7 +20,9 @@ from .runtime import LLMProvisioning
 
 DEFAULT_FRONTEND_MOUNT = "/"
 FRONTEND_AGENT_API_PREFIX = "/_a2a"
-DEFAULT_DOCS_URL = "https://docs.a2acloud.io/"
+from .cli.platform import docs_url as _platform_docs_url
+
+DEFAULT_DOCS_URL = _platform_docs_url()
 STATIC_FRONTEND_KINDS = {"static", "static-spa", "spa"}
 SERVER_RENDERED_FRONTEND_KINDS = {"server-rendered", "server", "ssr"}
 SERVER_RENDERED_FRONTEND_KIND = "server-rendered"

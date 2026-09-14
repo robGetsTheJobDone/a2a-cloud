@@ -220,7 +220,7 @@ async def deploy_source_push(
 
     expected_url = _canonical_url(agent.name) if agent.public else agent.url
     source_public_url = _public_repo_url(agent.name, owner=agent.gitea_owner)
-    expected_image = f"registry.a2acloud.io/agents/{agent.name}:{source_sha}"
+    expected_image = settings.agent_image(agent.name, source_sha)
     deployment: AgentDeployment | None = None
     try:
         deployment = await create_deployment(

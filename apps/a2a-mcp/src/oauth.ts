@@ -11,10 +11,13 @@ import {
   DEFAULT_API_URL,
   type Credentials,
   loadCredentials,
+  platformDomain,
   saveCredentials,
 } from "./credentials.js";
 
-export const DEFAULT_OAUTH_ISSUER = "https://auth.a2acloud.io/realms/a2acloud";
+export const DEFAULT_OAUTH_ISSUER = (
+  process.env.A2A_OAUTH_ISSUER || `https://auth.${platformDomain()}/realms/a2acloud`
+).replace(/\/+$/, "");
 export const DEFAULT_OAUTH_CLIENT_ID = "a2acloud-cli";
 export const DEFAULT_OAUTH_SCOPE = "openid email offline_access mcp:invoke agent:read";
 export const DEFAULT_REDIRECT_PORT = 41873;

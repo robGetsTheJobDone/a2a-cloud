@@ -25,7 +25,7 @@ from control_plane.models import (
 
 
 def test_resolved_digest_matches_requested_tagged_image():
-    expected = "registry.a2acloud.io/agents/example:abc123"
+    expected = "registry.example.com/agents/example:abc123"
     resolved = f"{expected}@sha256:" + "f" * 64
     assert deployments._image_matches(expected, [resolved], resolved) is True
 
@@ -33,7 +33,7 @@ def test_resolved_digest_matches_requested_tagged_image():
 def missing_argo_verification() -> dict[str, Any]:
     return {
         "live": False,
-        "url": "https://invoice-bot.a2acloud.io",
+        "url": "https://invoice-bot.example.com",
         "argo": {"ok": False, "exists": False, "sync": None, "health": None},
         "runtime": {"ok": False, "error": "deployment not found"},
         "health": {"ok": False, "error": "service not found"},
@@ -240,7 +240,7 @@ async def test_sync_deployment_verification_reindexes_changed_live_agent(
         _async_verification(
             {
                 "live": True,
-                "url": "https://invoice-bot.a2acloud.io",
+                "url": "https://invoice-bot.example.com",
                 "argo": {"ok": True},
                 "runtime": {"ok": True},
                 "health": {"ok": True},
@@ -289,9 +289,9 @@ async def test_sync_deployment_verification_reindexes_changed_live_agent(
         )
 
         assert out.status == "live"
-        assert out.agent_url == "https://invoice-bot.a2acloud.io"
+        assert out.agent_url == "https://invoice-bot.example.com"
         assert agent.status == "running"
-        assert agent.url == "https://invoice-bot.a2acloud.io"
+        assert agent.url == "https://invoice-bot.example.com"
         assert agent.version == "0.1.1"
         assert agent.card == live_card
         assert indexed == [
@@ -460,7 +460,7 @@ async def test_sync_deployment_verification_preserves_consumer_setup_metadata(
         _async_verification(
             {
                 "live": True,
-                "url": "https://invoice-bot.a2acloud.io",
+                "url": "https://invoice-bot.example.com",
                 "argo": {"ok": True},
                 "runtime": {"ok": True},
                 "health": {"ok": True},
@@ -551,8 +551,8 @@ async def test_sync_deployment_verification_sets_canonical_url_when_live_payload
         out = await deployments.sync_deployment_verification(session, agent, deploy)
 
         assert out.status == "live"
-        assert out.agent_url == "https://invoice-bot.a2acloud.io"
-        assert agent.url == "https://invoice-bot.a2acloud.io"
+        assert out.agent_url == "https://invoice-bot.example.com"
+        assert agent.url == "https://invoice-bot.example.com"
 
     await engine.dispose()
 
@@ -571,7 +571,7 @@ async def test_sync_deployment_verification_passes_expected_revision_and_image(
         captured["expected"] = expected
         return {
             "live": False,
-            "url": "https://invoice-bot.a2acloud.io",
+            "url": "https://invoice-bot.example.com",
             "argo": {"ok": False, "exists": True},
             "runtime": {"ok": False},
             "health": {"ok": False},
@@ -603,7 +603,7 @@ async def test_sync_deployment_verification_passes_expected_revision_and_image(
                 message="waiting",
                 data={
                     "expected_revision": "b" * 40,
-                    "expected_image": "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40,
+                    "expected_image": "registry.example.com/agents/invoice-bot:" + "a" * 40,
                 },
             )
         )
@@ -613,7 +613,7 @@ async def test_sync_deployment_verification_passes_expected_revision_and_image(
 
     assert captured["expected"] == {
         "runtime_revision": "b" * 40,
-        "image": "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40,
+        "image": "registry.example.com/agents/invoice-bot:" + "a" * 40,
         "source_sha": "a" * 40,
     }
     await engine.dispose()
@@ -628,7 +628,7 @@ async def test_expected_deployment_signals_uses_pinned_runtime_upgrade_image() -
 
     async with Session() as session:
         expected_image = (
-            "registry.a2acloud.io/agents/invoice-bot:"
+            "registry.example.com/agents/invoice-bot:"
             + "a" * 40
             + "-runtime-0.1.57-testnonce"
         )
@@ -661,10 +661,10 @@ async def test_verify_agent_deployment_waits_for_expected_runtime_image(
         name="invoice-bot",
         description="Invoice bot",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         public=True,
         status="building",
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={},
     )
     monkeypatch.setattr(
@@ -679,7 +679,7 @@ async def test_verify_agent_deployment_waits_for_expected_runtime_image(
             "ok": False,
             "image_matches": False,
             "expected_image": expected_image,
-            "images": ["registry.a2acloud.io/agents/invoice-bot:old"],
+            "images": ["registry.example.com/agents/invoice-bot:old"],
         },
     )
 
@@ -693,7 +693,7 @@ async def test_verify_agent_deployment_waits_for_expected_runtime_image(
 
     result = await deployments.verify_agent_deployment(
         agent,
-        expected={"image": "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40},
+        expected={"image": "registry.example.com/agents/invoice-bot:" + "a" * 40},
     )
 
     assert result["live"] is False
@@ -709,10 +709,10 @@ async def test_verify_agent_deployment_accepts_expected_image_when_argo_revision
         name="invoice-bot",
         description="Invoice bot",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         public=True,
         status="building",
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={},
     )
     monkeypatch.setattr(
@@ -748,7 +748,7 @@ async def test_verify_agent_deployment_accepts_expected_image_when_argo_revision
         agent,
         expected={
             "runtime_revision": "new",
-            "image": "registry.a2acloud.io/agents/invoice-bot:" + "a" * 40,
+            "image": "registry.example.com/agents/invoice-bot:" + "a" * 40,
         },
     )
 
@@ -763,10 +763,10 @@ def _knative_agent() -> Agent:
         name="invoice-bot",
         description="Invoice bot",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         public=True,
         status="building",
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={},
     )
 
@@ -903,7 +903,7 @@ def _live_verification() -> dict[str, Any]:
     }
     return {
         "live": True,
-        "url": "https://invoice-bot.a2acloud.io",
+        "url": "https://invoice-bot.example.com",
         "argo": {"ok": True},
         "runtime": {"ok": True},
         "health": {"ok": True},
@@ -979,10 +979,10 @@ async def _seed_deployment(
         name="invoice-bot",
         description="Invoice bot",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/invoice-bot:latest",
+        image="registry.example.com/agents/invoice-bot:latest",
         public=True,
         status=status,
-        url="https://invoice-bot.a2acloud.io",
+        url="https://invoice-bot.example.com",
         card={},
     )
     session.add(agent)
@@ -994,7 +994,7 @@ async def _seed_deployment(
         agent_name=agent.name,
         trigger=trigger,
         status=status,
-        source_repo_url="https://gitea.a2acloud.io/a2a-personal-2/invoice-bot",
+        source_repo_url="https://gitea.example.com/a2a-personal-2/invoice-bot",
         head_sha=head_sha,
         image=image or agent.image,
         agent_url=agent.url,

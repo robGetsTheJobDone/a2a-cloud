@@ -25,7 +25,7 @@ from agent_studio import (  # noqa: E402
 from agent_studio.specialists import (  # noqa: E402
     BUILDER_HANDOFF_TIMEOUT_SECONDS,
     BUILDER_WORKSPACE_TTL_SECONDS,
-    CODE_EDITOR_AGENT_TARGET,
+    code_editor_agent_target,
     _child_progress_message,
     _delegate_target_workspace_if_needed,
     _editable_ref,
@@ -79,9 +79,9 @@ def test_child_progress_message_redacts_tool_arguments_and_results() -> None:
     )
     assert (
         _child_progress_message(
-            {"payload": {"summary": "deployed: https://demo.a2acloud.io"}}
+            {"payload": {"summary": "deployed: https://demo.example.com"}}
         )
-        == "deployed: https://demo.a2acloud.io"
+        == "deployed: https://demo.example.com"
     )
     assert (
         _child_progress_message({"payload": {"summary": "receipt token abc.def"}})
@@ -168,14 +168,14 @@ class MockSpecialists:
             "ok": True,
             "name": name,
             "version": version,
-            "url": f"https://{name}.a2acloud.io",
+            "url": f"https://{name}.example.com",
             "workspace_dir": f"agents/{name}/",
         }
 
     async def load_live_state(self, *, name: str) -> dict[str, Any]:
         return {
             "ok": True,
-            "url": f"https://{name}.a2acloud.io",
+            "url": f"https://{name}.example.com",
             "head_sha": "abc123",
             "deployment_id": "deploy-123",
             "card": {
@@ -232,7 +232,7 @@ class MockSpecialists:
         del brief, live_state
         return {
             "ok": True,
-            "public_url": f"https://a2acloud.io/a/{name}",
+            "public_url": f"https://example.com/a/{name}",
             "checks": {"agent_card": {"ok": True}},
             "failures": [],
         }
@@ -257,7 +257,7 @@ class FakePlatform:
     def __init__(self, state: dict[str, Any] | None = None) -> None:
         self.state = state or {
             "ok": True,
-            "url": "https://invoice-helper.a2acloud.io",
+            "url": "https://invoice-helper.example.com",
             "head_sha": "abc123",
             "deployment_id": "deploy-123",
             "card": {
@@ -314,7 +314,7 @@ class FakePlatform:
         del repo_url, spec
         return {
             "ok": True,
-            "public_url": f"https://a2acloud.io/a/{name}",
+            "public_url": f"https://example.com/a/{name}",
             "live_app_url": f"{url}/app/",
             "checks": {"agent_card": {"ok": True}},
             "failures": [],
@@ -378,7 +378,7 @@ class LoopSpecialists(MockSpecialists):
         deployment_id = f"deploy-{self.refreshes}"
         return {
             "ok": True,
-            "url": f"https://{name}.a2acloud.io",
+            "url": f"https://{name}.example.com",
             "head_sha": self.live_head,
             "deployment_id": deployment_id,
             "latest_deployment": {
@@ -544,7 +544,7 @@ async def test_mocked_happy_path_succeeds() -> None:
     assert report.status == "succeeded"
     assert report.agent_name == "invoice-helper"
     assert report.public is False
-    assert report.agent_url == "https://invoice-helper.a2acloud.io"
+    assert report.agent_url == "https://invoice-helper.example.com"
     assert report.head_sha == "abc123"
     assert report.deployment_id == "deploy-123"
     assert report.review.status == "passed"
@@ -821,7 +821,7 @@ async def test_agent_studio_specialists_call_agent_builder_success() -> None:
             "ok": True,
             "name": "invoice-helper",
             "version": "0.1.0",
-            "url": "https://invoice-helper.a2acloud.io",
+            "url": "https://invoice-helper.example.com",
             "workspace_dir": "agents/invoice-helper/",
             "reply": "built it",
         }
@@ -860,10 +860,10 @@ async def test_agent_studio_specialists_call_agent_builder_success() -> None:
     ]
     assert ctx.calls[0]["timeout"] == BUILDER_HANDOFF_TIMEOUT_SECONDS
     assert "Read invoice text" in ctx.calls[0]["args"]["prompt"]
-    assert report.agent_url == "https://invoice-helper.a2acloud.io"
+    assert report.agent_url == "https://invoice-helper.example.com"
     assert report.workspace_dir == "agents/invoice-helper/"
     assert (
-        report.handoffs[0].result_summary["url"] == "https://invoice-helper.a2acloud.io"
+        report.handoffs[0].result_summary["url"] == "https://invoice-helper.example.com"
     )
     assert report.handoffs[0].result_summary["reply"] == "built it"
     assert report.public is True
@@ -1013,7 +1013,7 @@ async def test_agent_studio_evaluation_gates_full_stack_contract() -> None:
             self.receipt_reads = 0
 
         async def probe_frontend(self, url):
-            assert url == "https://quote-judge.a2acloud.io"
+            assert url == "https://quote-judge.example.com"
             return {
                 "ok": True,
                 "statuses": {
@@ -1110,7 +1110,7 @@ async def test_agent_studio_evaluation_gates_full_stack_contract() -> None:
         brief=brief,
         live_state={
             "ok": True,
-            "url": "https://quote-judge.a2acloud.io",
+            "url": "https://quote-judge.example.com",
             "card": {
                 "version": "0.1.0",
                 "skills": skills,
@@ -1194,7 +1194,7 @@ async def test_evaluation_proves_first_class_artifact_and_account_trial() -> Non
         brief=brief,
         live_state={
             "ok": True,
-            "url": "https://report-maker.a2acloud.io",
+            "url": "https://report-maker.example.com",
             "card": {
                 "skills": [{"name": "generate", "input_schema": {"type": "object"}}],
                 "runtime": {
@@ -1224,7 +1224,7 @@ async def test_evaluation_runs_declared_real_browser_journey(monkeypatch) -> Non
             del ctx
 
         async def run(self, *, base_url, journey, authorization=""):
-            assert base_url == "https://browser-app.a2acloud.io"
+            assert base_url == "https://browser-app.example.com"
             assert authorization == "Bearer cp-token"
             seen.append(journey)
             return {
@@ -1236,7 +1236,7 @@ async def test_evaluation_runs_declared_real_browser_journey(monkeypatch) -> Non
 
     class BrowserPlatform(FakePlatform):
         async def probe_frontend(self, url):
-            assert url == "https://browser-app.a2acloud.io"
+            assert url == "https://browser-app.example.com"
             return {"ok": True, "statuses": {"/app/": 200}, "auth_mode": "platform"}
 
     monkeypatch.setattr(
@@ -1267,7 +1267,7 @@ async def test_evaluation_runs_declared_real_browser_journey(monkeypatch) -> Non
         ),
         live_state={
             "ok": True,
-            "url": "https://browser-app.a2acloud.io",
+            "url": "https://browser-app.example.com",
             "card": {
                 "skills": [
                     {
@@ -1415,7 +1415,7 @@ async def test_agent_studio_evaluation_delegates_workspace_for_workspace_agent()
         brief=BuildBrief(agent_name="workspace-helper", goal="x", target_user="tester"),
         live_state={
             "ok": True,
-            "url": "https://workspace-helper.a2acloud.io",
+            "url": "https://workspace-helper.example.com",
             "card": {
                 "workspace_access": {
                     "enabled": True,
@@ -1576,7 +1576,7 @@ async def test_agent_studio_evaluation_samples_regex_safe_slug() -> None:
 @pytest.mark.asyncio
 async def test_agent_studio_evaluation_private_cloud_agent_uses_canonical_url() -> None:
     ctx = FakeCallContext(result={"ok": True, "summary": "ran"})
-    ctx.cp_url = "https://api.a2acloud.io"
+    ctx.cp_url = "https://api.example.com"
     specialists = AgentStudioSpecialists(ctx, platform=FakePlatform())
 
     results = await specialists.evaluate(
@@ -1597,7 +1597,7 @@ async def test_agent_studio_evaluation_private_cloud_agent_uses_canonical_url() 
     )
 
     assert [result.status for result in results] == ["pass", "pass"]
-    assert ctx.calls[0]["target"] == "https://private-helper.a2acloud.io"
+    assert ctx.calls[0]["target"] == "https://private-helper.example.com"
 
 
 @pytest.mark.asyncio
@@ -2305,7 +2305,7 @@ async def test_agent_studio_specialists_patch_enables_opt_in_and_never_pushes_on
 
     assert platform.enabled == ["invoice-helper"]
     assert platform.source_deploys == ["invoice-helper"]
-    assert ctx.calls[0]["target"] == CODE_EDITOR_AGENT_TARGET
+    assert ctx.calls[0]["target"] == code_editor_agent_target()
     assert ctx.calls[0]["skill"] == "turn"
     assert ctx.calls[0]["args"]["dry_run"] is False
     assert ctx.calls[0]["args"]["push_on_failure"] is False
@@ -2410,7 +2410,7 @@ async def test_platform_helper_fetches_safe_agent_state_and_refresh_warning() ->
                 "name": "invoice-helper",
                 "status": "running",
                 "public": False,
-                "url": "https://invoice-helper.a2acloud.io",
+                "url": "https://invoice-helper.example.com",
                 "version": "0.1.0",
                 "repo_url": "https://gitea.example/user/invoice-helper",
                 "card": {
@@ -2480,7 +2480,7 @@ async def test_platform_helper_refresh_loads_latest_deployment_when_agent_omits_
                 "name": "invoice-helper",
                 "status": "running",
                 "public": False,
-                "url": "https://invoice-helper.a2acloud.io",
+                "url": "https://invoice-helper.example.com",
                 "version": "0.1.0",
                 "card": {
                     "name": "invoice-helper",
@@ -2512,7 +2512,7 @@ async def test_platform_helper_refresh_loads_latest_deployment_when_agent_omits_
 async def test_platform_helper_preserves_live_workspace_access() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert str(request.url) == (
-            "https://workspace-helper.a2acloud.io/.well-known/agent-card"
+            "https://workspace-helper.example.com/.well-known/agent-card"
         )
         return httpx.Response(
             200,
@@ -2535,7 +2535,7 @@ async def test_platform_helper_preserves_live_workspace_access() -> None:
         client_factory=lambda: client,
     )
 
-    result = await helper.fetch_live_card("https://workspace-helper.a2acloud.io")
+    result = await helper.fetch_live_card("https://workspace-helper.example.com")
 
     assert result["ok"] is True
     assert result["card"]["workspace_access"] == {
@@ -2561,7 +2561,7 @@ async def test_platform_helper_probes_frontend_mcp_and_receipts_without_tokens()
             return httpx.Response(
                 200,
                 json={
-                    "endpoints": {"invoke": "https://quote-judge.a2acloud.io/invoke"},
+                    "endpoints": {"invoke": "https://quote-judge.example.com/invoke"},
                     "auth": {"mode": "platform"},
                     "ui": {"type": "static-spa"},
                 },
@@ -2641,10 +2641,10 @@ async def test_platform_helper_probes_frontend_mcp_and_receipts_without_tokens()
         client_factory=lambda: client,
     )
 
-    frontend = await helper.probe_frontend("https://quote-judge.a2acloud.io")
-    tools = await helper.list_mcp_tools("https://quote-judge.a2acloud.io")
+    frontend = await helper.probe_frontend("https://quote-judge.example.com")
+    tools = await helper.list_mcp_tools("https://quote-judge.example.com")
     called = await helper.call_mcp_tool(
-        "https://quote-judge.a2acloud.io",
+        "https://quote-judge.example.com",
         tool="get_comparison",
         arguments={"comparison_id": "cmp-1"},
     )
@@ -2680,8 +2680,8 @@ async def test_platform_helper_publishes_and_returns_distribution_package() -> N
                 "name": "report-maker",
                 "status": "ready",
                 "public": True,
-                "url": "https://report-maker.a2acloud.io",
-                "repo_url": "https://git.a2acloud.io/alice/report-maker",
+                "url": "https://report-maker.example.com",
+                "repo_url": "https://git.example.com/alice/report-maker",
                 "card": {"name": "report-maker", "skills": [{"name": "generate"}]},
             },
         )
@@ -2696,8 +2696,8 @@ async def test_platform_helper_publishes_and_returns_distribution_package() -> N
     published = await helper.publish_agent("report-maker")
     package = await helper.verify_distribution(
         name="report-maker",
-        url="https://report-maker.a2acloud.io",
-        repo_url="https://git.a2acloud.io/alice/report-maker",
+        url="https://report-maker.example.com",
+        repo_url="https://git.example.com/alice/report-maker",
         spec=DistributionSpec(
             public_page=False,
             live_app=False,
@@ -2738,7 +2738,7 @@ async def test_platform_helper_frontend_probe_blocks_internal_markers() -> None:
         client_factory=lambda: client,
     )
 
-    result = await helper.probe_frontend("https://leaky-app.a2acloud.io")
+    result = await helper.probe_frontend("https://leaky-app.example.com")
 
     assert result["ok"] is False
     assert result["markers"] == ["internal-service-host"]
@@ -2753,7 +2753,7 @@ async def test_platform_helper_frontend_probe_requires_unwrapped_result_contract
             return httpx.Response(
                 200,
                 json={
-                    "endpoints": {"invoke": "https://broken-app.a2acloud.io/invoke"},
+                    "endpoints": {"invoke": "https://broken-app.example.com/invoke"},
                     "auth": {"mode": "platform"},
                 },
             )
@@ -2766,7 +2766,7 @@ async def test_platform_helper_frontend_probe_requires_unwrapped_result_contract
         client_factory=lambda: client,
     )
 
-    result = await helper.probe_frontend("https://broken-app.a2acloud.io")
+    result = await helper.probe_frontend("https://broken-app.example.com")
 
     assert result["ok"] is False
     assert result["status_code"] == 422
@@ -2787,7 +2787,7 @@ async def test_platform_helper_enable_code_editor_summarizes_response() -> None:
                 "name": "invoice-helper",
                 "status": "running",
                 "public": False,
-                "url": "https://invoice-helper.a2acloud.io",
+                "url": "https://invoice-helper.example.com",
                 "version": "0.1.0",
                 "card": {
                     "name": "invoice-helper",

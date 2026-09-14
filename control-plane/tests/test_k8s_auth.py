@@ -150,7 +150,7 @@ def test_delete_agent_retries_unauthorized_resource_after_reloading_kube(
     assert load_calls == 12
     assert custom_deletes == [
         ("services", "demo-agent"),
-        ("domainmappings", "demo-agent.a2acloud.io"),
+        ("domainmappings", "demo-agent.example.com"),
         ("middlewares", "demo-agent-custom-domains-https"),
         ("middlewares", "demo-agent-custom-domains-host"),
     ]
@@ -227,7 +227,7 @@ def test_delete_legacy_knative_agent_deletes_owned_core_service(monkeypatch) -> 
 
     assert custom_deletes == [
         ("services", "demo-agent"),
-        ("domainmappings", "demo-agent.a2acloud.io"),
+        ("domainmappings", "demo-agent.example.com"),
     ]
     assert service_deletes == ["demo-agent"]
 

@@ -21,6 +21,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .analytics import identify_profile, track_event
 from .config import settings
+
+
+def _placeholder_email_suffix() -> str:
+    """Domain suffix for synthetic emails minted for email-less OIDC subjects."""
+    return f"@keycloak.{settings.platform_domain}"
 from .models import KeycloakIdentity, User
 from .org_provisioning import create_personal_organization
 
@@ -99,14 +104,14 @@ async def provision_user_from_claims(
         user = await session.get(User, ident.user_id)
         if user is not None:
             # A token from an email-less client may have created this user with
-            # a kc-<sub>@keycloak.a2acloud.io placeholder. Adopt the real email
+            # a kc-<sub>@keycloak.<platform_domain> placeholder. Adopt the real email
             # the first time a verified one shows up, unless another user
             # already owns it.
             if (
                 email
                 and email_verified
                 and user.email != email
-                and user.email.endswith("@keycloak.a2acloud.io")
+                and user.email.endswith(_placeholder_email_suffix())
             ):
                 taken = (
                     await session.execute(select(User).where(User.email == email))
@@ -136,7 +141,7 @@ async def provision_user_from_claims(
         # connector users arrive via auth-code flow and carry a real email; this
         # fallback only covers email-less tokens (e.g. service accounts).
         user = User(
-            email=email or f"kc-{sub}@keycloak.a2acloud.io", password_hash=placeholder
+            email=email or f"kc-{sub}{_placeholder_email_suffix()}", password_hash=placeholder
         )
         session.add(user)
         await session.flush()

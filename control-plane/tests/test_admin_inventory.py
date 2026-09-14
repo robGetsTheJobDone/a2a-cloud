@@ -89,7 +89,7 @@ async def _make_agent(
             name=name,
             description="",
             version="0.1.0",
-            image="registry.a2acloud.io/agents/test:latest",
+            image="registry.example.com/agents/test:latest",
             public=True,
             status="ready",
             card={},
@@ -213,7 +213,7 @@ async def test_keycloak_admin_auth_requires_admin_flag(
 
     def fake_verify(token: str, *, audience: str) -> dict:
         assert token == "admin-id-token"
-        assert audience == "a2acloud-admin"
+        assert audience == "a2a-admin"
         return {
             "sub": "kc-admin",
             "email": "admin@example.com",
@@ -242,7 +242,7 @@ async def test_keycloak_admin_auth_rejects_non_admin(
 ) -> None:
     def fake_verify(token: str, *, audience: str) -> dict:
         assert token == "user-id-token"
-        assert audience == "a2acloud-admin"
+        assert audience == "a2a-admin"
         return {
             "sub": "kc-user",
             "email": "user@example.com",

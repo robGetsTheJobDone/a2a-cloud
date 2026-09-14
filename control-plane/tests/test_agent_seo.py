@@ -21,7 +21,7 @@ def _agent(owner_id: int) -> Agent:
         image="example/support-refund-agent",
         public=True,
         status="running",
-        url="https://support-refund-agent.a2acloud.io",
+        url="https://support-refund-agent.example.com",
         card={
             "description": "Receives support email, checks Stripe refund eligibility, drafts a reply, requires approval before refunding, and posts an audit to Slack.",
             "skills": [

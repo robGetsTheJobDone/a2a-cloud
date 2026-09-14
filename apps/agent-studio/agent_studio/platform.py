@@ -141,7 +141,10 @@ class PlatformHelperClient:
             }
             if not checks["mcp"]["ok"]:
                 failures.append(f"mcp: {mcp.get('error') or 'no tools exposed'}")
-        public_root = os.getenv("A2A_PUBLIC_WEB_URL", "https://a2acloud.io").rstrip("/")
+        public_root = (
+            os.getenv("A2A_PUBLIC_WEB_URL")
+            or f"https://{os.getenv('A2A_PLATFORM_DOMAIN', 'example.com')}"
+        ).rstrip("/")
         public_page = f"{public_root}/a/{quote(name, safe='')}"
         if spec.public_page or spec.seo or spec.shareable_demo:
             await get_check("public_page", public_page)

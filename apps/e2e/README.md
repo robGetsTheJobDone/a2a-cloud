@@ -1,8 +1,8 @@
 # a2a-e2e
 
 End-to-end black-box tests for the a2a platform API. No SDK imports, no
-control-plane internals — just HTTP against `api.a2acloud.io` (or any
-deployment via `A2A_E2E_API_URL`).
+control-plane internals — just HTTP against a control plane. The target is
+`A2A_E2E_API_URL` (or `A2A_API_URL`), default `http://127.0.0.1:8000`.
 
 ## Coverage
 
@@ -21,7 +21,7 @@ python3 -m venv .venv
 .venv/bin/pip install -e '.[]'
 .venv/bin/pip install pytest pytest-asyncio httpx
 
-# Production cluster (default)
+# Local control plane (default http://127.0.0.1:8000)
 .venv/bin/pytest -v
 
 # Local docker-desktop cluster

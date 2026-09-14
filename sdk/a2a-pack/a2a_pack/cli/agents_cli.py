@@ -35,7 +35,7 @@ from typing import Any, Optional
 import typer
 from rich.console import Console
 
-from . import credentials
+from . import credentials, platform
 from .api_client import ApiError, ControlPlaneClient
 from .oauth_login import refresh_credentials_if_needed
 from .receipts_cli import (
@@ -186,9 +186,7 @@ def _write_stub(agent: str, url: str, card: dict[str, Any]) -> dict[str, Any]:
 
 def _app_url() -> str:
     """The web app origin, derived from the API origin (api.x -> app.x)."""
-    creds = credentials.load()
-    api = (creds.api_url if creds else "https://api.a2acloud.io").rstrip("/")
-    return api.replace("://api.", "://app.", 1)
+    return platform.dashboard_url()
 
 
 def _agent_settings_url(agent: str) -> str:
@@ -387,7 +385,7 @@ def invoke_skill(
         if "LLM key required" in message or "LLM credential" in message:
             message += (
                 "\nhint: this agent runs on your LLM credential — add one in "
-                "Settings > LLM credentials (app.a2acloud.io), then retry."
+                f"Settings > LLM credentials ({platform.dashboard_url()}), then retry."
             )
         if "ConsumerSetupLookupError" in message or "consumer setup required" in message:
             agent_name = url.split("://", 1)[-1].split(".", 1)[0]

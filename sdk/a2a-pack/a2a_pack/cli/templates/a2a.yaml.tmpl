@@ -6,7 +6,7 @@ version: 0.1.0
 entrypoint: agent:{{ class_name }}
 expose:
   # Registry listing only. `false` keeps the agent out of the public
-  # registry at a2acloud.io; it is not access control — the agent still
+  # registry of the platform; it is not access control — the agent still
   # gets its canonical https URL, and who may call it is decided by the
   # auth model declared on the agent. Set this to true (or run
   # `a2a deploy --public` once) to list it.

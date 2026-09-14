@@ -13,8 +13,7 @@ from deepagents.backends.utils import create_file_data
 from langgraph.store.memory import InMemoryStore
 
 from .config import Settings, load_settings
-from .tools import ToolContext, _should_include_source_path, build_tools
-
+from .tools import ToolContext, _should_include_source_path, build_tools, docs_url
 
 BUILDER_SKILL_SOURCE = "/.agent-builder/skills/"
 _BUILDER_SKILL_NAMESPACE = ("agent-builder", "skills")
@@ -140,7 +139,7 @@ the generated endpoints, and can use the browser helper at
 runtime details in frontend source; the frontend should use the agent's public
 tool schemas and inherited platform auth. For local development, run the
 agent and then run the React dev server with ``A2A_DEV_AGENT_URL`` pointed at
-the local agent. See ``https://docs.a2acloud.io/concepts/packed-frontends`` for
+the local agent. See ``{packed_frontends_docs_url}`` for
 the deployment contract.
 
 The JSON ``POST /invoke/<skill>`` response is an HTTP envelope shaped like
@@ -425,7 +424,9 @@ Discipline:
   - Canonical decorator style is namespaced: ``import a2a_pack as a2a`` and
     ``@a2a.tool(...)``. This avoids collision with langchain's bare ``@tool``.
     Bare ``@tool`` and legacy ``@skill`` are the same object and still work.
-"""
+""".replace(
+    "{packed_frontends_docs_url}", docs_url("concepts/packed-frontends")
+)
 
 
 def build_agent_builder(ctx: BuilderContext) -> Any:

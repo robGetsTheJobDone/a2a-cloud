@@ -61,6 +61,20 @@ decorators (e.g. LangChain's); both also work as bare imports
 That's it. `a2a deploy` packages the source, the control plane builds
 the image, ArgoCD reconciles, you get a full A2A compliant public URL.
 
+## Pointing the CLI at your own platform
+
+The SDK ships with one hosted default (`a2acloud.io`, in `a2a_pack/cli/platform.py`). Everything else is
+derived from the control plane you log into, so a self-hosted platform needs no code changes:
+
+| Variable | Effect |
+|---|---|
+| `A2A_API_URL` | Control-plane base URL (also saved by `a2a login --api ...`). Docs, dashboard, registry, and agent URLs derive from its host (`api.example.com` → `example.com`). |
+| `A2A_PLATFORM_DOMAIN` | Force the apex domain instead of deriving it. |
+| `A2A_DOCS_URL`, `A2A_DASHBOARD_URL`, `A2A_REGISTRY_HOST` | Override individual hosts. |
+| `A2A_OAUTH_ISSUER`, `A2A_OAUTH_REALM`, `A2A_OAUTH_CLIENT_ID` | OIDC issuer/realm/client for `a2a login`. |
+
+URLs reported by the control plane (deployed agent URLs, setup links) always win over derived values.
+
 ## Local development
 
 Use the same agent card, invoke path, secret names, and workspace contract
@@ -404,12 +418,12 @@ Full reference + auto-generated docs at **https://docs.a2acloud.io**.
 
 ## Self-hosting
 
-The platform pieces (control plane, sandbox runtime, gitea, ArgoCD,
-MinIO, LiteLLM) live at
-[gitea.a2acloud.io](https://gitea.a2acloud.io) — the SDK is the only
-piece you need on PyPI. If you want to run the whole stack locally
-or in your own cluster, the bootstrap recipe is in the platform
-[README](https://gitea.a2acloud.io/gitea_admin/a2a-pack).
+The platform pieces (control plane, sandbox runtime, dashboard, docs) live in
+the same monorepo as this SDK:
+[github.com/robGetsTheJobDone/a2a-cloud](https://github.com/robGetsTheJobDone/a2a-cloud).
+The SDK is the only piece you need from PyPI; see the repository's
+`SELF_HOSTING.md` to run the whole stack, then point the CLI at it with
+`A2A_API_URL` (see "Pointing the CLI at your own platform" above).
 
 ## License
 

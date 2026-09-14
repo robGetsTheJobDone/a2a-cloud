@@ -103,7 +103,7 @@ async def test_service_access_lists_links_without_secret_values(
                     image="registry.example/researcher:latest",
                     public=True,
                     status="live",
-                    url="https://researcher.a2acloud.io",
+                    url="https://researcher.example.com",
                     card={},
                 )
             )

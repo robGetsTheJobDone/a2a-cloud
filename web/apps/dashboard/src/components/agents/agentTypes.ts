@@ -5,6 +5,7 @@ import {
   type MyAgentListing,
   type SubagentRun,
 } from "../../api";
+import { isPlatformAgentHost } from "../../lib/platform";
 import {
   type AgentDetailSection,
 } from "../../navigation";
@@ -185,7 +186,7 @@ export function splitOpenApiUrls(value: string): string[] {
 function inferA2AOpenApiUrl(defaultBaseUrl: string): string | null {
   try {
     const url = new URL(defaultBaseUrl);
-    if (!url.hostname.endsWith(".a2acloud.io")) return null;
+    if (!isPlatformAgentHost(url.hostname)) return null;
     url.pathname = `${url.pathname.replace(/\/$/, "")}/openapi.json`;
     url.search = "";
     url.hash = "";

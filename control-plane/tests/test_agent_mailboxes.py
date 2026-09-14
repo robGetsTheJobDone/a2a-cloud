@@ -77,7 +77,7 @@ async def _agent(session, user: User, name: str = "mailer") -> Agent:
         image=f"registry.example/{name}:latest",
         public=True,
         status="running",
-        url=f"https://{name}.a2acloud.io",
+        url=f"https://{name}.example.com",
         card={"skills": [{"name": "run"}]},
     )
     session.add(agent)
@@ -391,7 +391,7 @@ async def test_request_patch_delete_mailbox_pro():
 
 
 _RAW_EMAIL = b"""From: Client <client@corp.io>\r
-To: mailer@agents.a2acloud.io\r
+To: mailer@agents.example.com\r
 Subject: Need pricing\r
 Message-ID: <root@corp.io>\r
 Content-Type: text/plain\r
@@ -412,7 +412,7 @@ def test_parse_inbound_email_thread_key_root():
 def test_parse_inbound_email_reply_uses_references_root():
     raw = _RAW_EMAIL.replace(
         b"Message-ID: <root@corp.io>\r\n",
-        b"Message-ID: <reply-2@corp.io>\r\nReferences: <root@corp.io> <reply-1@agents.a2acloud.io>\r\n",
+        b"Message-ID: <reply-2@corp.io>\r\nReferences: <root@corp.io> <reply-1@agents.example.com>\r\n",
     )
     email = parse_inbound_email(8, raw)
     assert email.thread_key == "<root@corp.io>"
@@ -495,7 +495,7 @@ def test_reply_from_task_structured_and_text():
 def test_inbound_email_payload_shape_with_attachment():
     raw = (
         b"From: Client <client@corp.io>\r\n"
-        b"To: mailer@agents.a2acloud.io\r\n"
+        b"To: mailer@agents.example.com\r\n"
         b"Subject: With attachment\r\n"
         b"Message-ID: <att@corp.io>\r\n"
         b"Date: Thu, 10 Jul 2026 12:00:00 +0000\r\n"
@@ -535,7 +535,7 @@ def _mk_agent(card: dict) -> Agent:
         image="x",
         public=True,
         status="running",
-        url="https://mailer.a2acloud.io",
+        url="https://mailer.example.com",
         card=card,
     )
 
@@ -633,7 +633,7 @@ async def test_fetch_skills_manifest_retries_after_cold_start_failure(monkeypatc
 
     monkeypatch.setattr(mail_ingress_module, "safe_fetch_url", fake_fetch)
     manifest = await mail_ingress_module._fetch_skills_manifest(
-        "https://mailer.a2acloud.io"
+        "https://mailer.example.com"
     )
     assert manifest == {"skills": []}
     assert calls == 2
@@ -705,7 +705,7 @@ async def test_ingress_bridges_email_to_thread_and_replies(monkeypatch):
 
     def fake_send(**kwargs):
         sent.append(kwargs)
-        return "<reply@agents.a2acloud.io>"
+        return "<reply@agents.example.com>"
 
     monkeypatch.setattr(mail_ingress_module, "_fetch_new_messages_sync", fake_fetch)
     monkeypatch.setattr(mail_ingress_module, "_invoke_agent_with_email", fake_invoke)
@@ -843,7 +843,7 @@ async def test_ingress_passes_thread_history_on_follow_up(monkeypatch):
         return AgentEmailReply(body=f"answer-{email.uid}")
 
     def fake_send(**kwargs):
-        return f"<agent-reply-{kwargs['in_reply_to']}@agents.a2acloud.io>"
+        return f"<agent-reply-{kwargs['in_reply_to']}@agents.example.com>"
 
     monkeypatch.setattr(mail_ingress_module, "_fetch_new_messages_sync", fake_fetch)
     monkeypatch.setattr(mail_ingress_module, "_invoke_agent_with_email", fake_invoke)
@@ -920,7 +920,7 @@ async def test_ingress_rate_limits_outbound(monkeypatch):
 
     def fake_send(**kwargs):  # pragma: no cover - limit must block first
         sent.append(kwargs)
-        return "<x@agents.a2acloud.io>"
+        return "<x@agents.example.com>"
 
     monkeypatch.setattr(mail_ingress_module, "_fetch_new_messages_sync", fake_fetch)
     monkeypatch.setattr(mail_ingress_module, "_invoke_agent_with_email", fake_invoke)

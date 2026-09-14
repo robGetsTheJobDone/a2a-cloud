@@ -590,7 +590,7 @@ async def test_call_agent_account_trial_exhaustion_requires_byok() -> None:
             "ok": False,
             "error": "llm_credentials_required",
             "reason": "platform_trial_exhausted",
-            "setup_url": "https://app.a2acloud.io/llm-keys",
+            "setup_url": "https://app.example.com/llm-keys",
         }
 
     call_agent = build_handoff_tools(_ctx(

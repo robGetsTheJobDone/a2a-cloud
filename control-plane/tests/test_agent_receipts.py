@@ -36,10 +36,10 @@ async def db_session():
             name="research-agent",
             description="",
             version="1.0.0",
-            image="registry.a2acloud.io/agents/research-agent:latest",
+            image="registry.example.com/agents/research-agent:latest",
             public=True,
             status="running",
-            url="https://research-agent.a2acloud.io",
+            url="https://research-agent.example.com",
             card={"skills": [{"name": "search"}]},
         )
         session.add(agent)

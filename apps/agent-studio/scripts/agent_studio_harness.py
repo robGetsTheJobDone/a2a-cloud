@@ -23,10 +23,10 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-
-DEFAULT_API_URL = "https://api.a2acloud.io"
-DEFAULT_AGENT_URL = "https://agent-studio.a2acloud.io"
-DEFAULT_EMAIL = "agent-studio-harness@a2acloud.io"
+PLATFORM_DOMAIN = os.environ.get("A2A_PLATFORM_DOMAIN", "example.com")
+DEFAULT_API_URL = os.environ.get("A2A_API_URL", f"https://api.{PLATFORM_DOMAIN}")
+DEFAULT_AGENT_URL = os.environ.get("A2A_AGENT_STUDIO_URL", f"https://agent-studio.{PLATFORM_DOMAIN}")
+DEFAULT_EMAIL = os.environ.get("A2A_HARNESS_EMAIL", f"agent-studio-harness@{PLATFORM_DOMAIN}")
 DEFAULT_LLM_MODEL = "gpt-5.5"
 DEFAULT_LLM_BASE_URL = "http://litellm.llm.svc.cluster.local:4000/v1"
 DEFAULT_GOAL = (

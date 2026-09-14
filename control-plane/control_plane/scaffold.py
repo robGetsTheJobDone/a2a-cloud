@@ -37,7 +37,7 @@ DEFAULT_FRONTEND_SERVER_PORT = 3000
 
 DOCKERFILE = """\
 {frontend_stage}\
-FROM registry.a2acloud.io/a2a/a2a-pack-base:{base_image_tag}
+FROM {base_image_repo}:{base_image_tag}
 
 {apt_block}WORKDIR /app
 
@@ -62,7 +62,7 @@ CMD ["a2a", "run", "--entrypoint", "{entrypoint}", "--host", "0.0.0.0", "--port"
 
 SIDECAR_DOCKERFILE = """\
 {frontend_stage}\
-FROM registry.a2acloud.io/a2a/{sidecar_base_image}:{base_image_tag}
+FROM {sidecar_base_image_repo}:{base_image_tag}
 
 {apt_block}WORKDIR /app
 
@@ -133,6 +133,10 @@ RUN curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \\
 """
 
 
+def _default_docs_url() -> str:
+    return str(settings.docs_url).rstrip("/") + "/"
+
+
 def _sanitize_apt_packages(raw: object) -> list[str]:
     if not isinstance(raw, (list, tuple)):
         return []
@@ -198,14 +202,14 @@ def _read_frontend_config(workdir: Path) -> dict[str, object] | None:
             "an origin-bound browser session gateway is configured"
         )
     build = _clean_build(raw.get("build"))
-    docs_url = str(raw.get("docs_url") or raw.get("docsUrl") or "https://docs.a2acloud.io/").strip()
+    docs_url = str(raw.get("docs_url") or raw.get("docsUrl") or _default_docs_url()).strip()
     cfg: dict[str, object] = {
         "type": kind,
         "path": path,
         "mount": mount,
         "auth": auth,
         "build": build,
-        "docs_url": docs_url or "https://docs.a2acloud.io/",
+        "docs_url": docs_url or _default_docs_url(),
     }
     if kind == SERVER_RENDERED_FRONTEND_KIND:
         framework = str(raw.get("framework") or "nextjs").strip().lower()
@@ -605,10 +609,10 @@ jobs:
           set -e
           test "$REGISTRY_USERNAME" = registry-push
           test -n "$REGISTRY_PASSWORD"
-          trap 'docker logout registry.a2acloud.io >/dev/null 2>&1 || true' EXIT
-          printf '%s' "$REGISTRY_PASSWORD" | docker login registry.a2acloud.io \
+          trap 'docker logout {image_registry} >/dev/null 2>&1 || true' EXIT
+          printf '%s' "$REGISTRY_PASSWORD" | docker login {image_registry} \
             --username "$REGISTRY_USERNAME" --password-stdin
-          IMG=registry.a2acloud.io/agents/{name}
+          IMG={image_repo}
           docker build --pull -f Dockerfile -t "$IMG:$IMAGE_TAG" -t "$IMG:latest" src
           push_output="$(docker push "$IMG:$IMAGE_TAG" 2>&1 | tee /dev/stderr)"
           docker push "$IMG:latest"
@@ -622,7 +626,7 @@ jobs:
 
       - name: bump deploy manifest
         run: |
-          IMG=registry.a2acloud.io/agents/{name}
+          IMG={image_repo}
           PINNED_IMAGE="$(cat .a2a-pushed-image)"
           rm -f .a2a-pushed-image
           [[ "$PINNED_IMAGE" =~ ^$IMG:[^@[:space:]]+@sha256:[0-9a-f]{{64}}$ ]]
@@ -682,15 +686,15 @@ spec:
       responseStartTimeoutSeconds: {response_start_timeout_seconds}
       containers:
         - name: agent
-          image: registry.a2acloud.io/agents/{name}:{image_tag}
+          image: {image_repo}:{image_tag}
           imagePullPolicy: Always
           env:
             - name: A2A_AGENT_NAME
               value: "{name}"
             - name: A2A_AGENT_IMAGE
-              value: registry.a2acloud.io/agents/{name}:{image_tag}
+              value: {image_repo}:{image_tag}
             - name: A2A_RENDER_IMAGE
-              value: registry.a2acloud.io/agents/{name}:{image_tag}
+              value: {image_repo}:{image_tag}
             - name: A2A_CP_URL
               value: "{cp_url}"
             - name: A2A_LOGIN_URL
@@ -765,7 +769,7 @@ spec:
         a2a/worker: "true"
       containers:
         - name: agent
-          image: registry.a2acloud.io/agents/{name}:{image_tag}
+          image: {image_repo}:{image_tag}
           imagePullPolicy: Always
           env:
             - name: A2A_AGENT_NAME
@@ -773,9 +777,9 @@ spec:
             - name: A2A_AGENT_PUBLIC
               value: "true"
             - name: A2A_AGENT_IMAGE
-              value: registry.a2acloud.io/agents/{name}:{image_tag}
+              value: {image_repo}:{image_tag}
             - name: A2A_RENDER_IMAGE
-              value: registry.a2acloud.io/agents/{name}:{image_tag}
+              value: {image_repo}:{image_tag}
             - name: A2A_CP_URL
               value: "{cp_url}"
             - name: A2A_LOGIN_URL
@@ -956,6 +960,10 @@ def _stamp_platform_files(
     (workdir / "Dockerfile").write_text(
         dockerfile_template.format(
             entrypoint=entrypoint,
+            base_image_repo=settings.base_image_repo,
+            sidecar_base_image_repo=settings.sidecar_base_image_repo(
+                build_plan.sidecar_base_image or ""
+            ),
             base_image_tag=base_image_tag,
             apt_block=_apt_block(apt_packages),
             feature_block=_feature_block(runtime_features),
@@ -972,6 +980,8 @@ def _stamp_platform_files(
     (wf_dir / "build.yml").write_text(
         WORKFLOW.format(
             name=name,
+            image_registry=settings.image_registry,
+            image_repo=f"{settings.image_repo_prefix.rstrip('/')}/{name}",
             source_repo_url=json.dumps(_credential_free_repo_url(source_repo_url)),
             source_sha=source_sha,
             image_tag=deploy_image_tag,
@@ -987,6 +997,7 @@ def _stamp_platform_files(
     (deploy_dir / "20-deployment.yaml").write_text(
         deployment_template.format(
             name=name,
+            image_repo=f"{settings.image_repo_prefix.rstrip('/')}/{name}",
             image_tag=deploy_image_tag,
             host=settings.ingress_host_template.format(name=name),
             secret_name=agent_runtime_secret_name(name),

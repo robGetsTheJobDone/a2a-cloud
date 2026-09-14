@@ -446,7 +446,7 @@ describe("DashboardRoutes code splitting", () => {
     expect(
       isStaleChunkError(
         new Error(
-          "Failed to fetch dynamically imported module: https://app.a2acloud.io/assets/Compliance-CH9L9gcA.js",
+          "Failed to fetch dynamically imported module: https://app.example.com/assets/Compliance-CH9L9gcA.js",
         ),
       ),
     ).toBe(true);

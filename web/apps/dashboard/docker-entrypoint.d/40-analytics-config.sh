@@ -1,12 +1,14 @@
 #!/bin/sh
 set -eu
 
+# Analytics are off unless both POSTHOG_KEY and POSTHOG_API_URL (your PostHog
+# ingest host or reverse proxy) are configured.
 api_key="${POSTHOG_KEY:-}"
-api_url="${POSTHOG_API_URL:-https://e.a2acloud.io}"
-script_url="${POSTHOG_SCRIPT_URL:-${POSTHOG_API_URL:-https://e.a2acloud.io}/static/array.js}"
+api_url="${POSTHOG_API_URL:-}"
+script_url="${POSTHOG_SCRIPT_URL:-${api_url}/static/array.js}"
 out="/usr/share/nginx/html/analytics-config.js"
 
-if [ -z "$api_key" ]; then
+if [ -z "$api_key" ] || [ -z "$api_url" ]; then
   printf '%s\n' 'window.__a2aAnalyticsDisabled = true;' > "$out"
   exit 0
 fi

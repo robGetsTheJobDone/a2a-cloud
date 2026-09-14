@@ -76,13 +76,13 @@ async def test_harness_cleanup_deletes_only_stale_private_harness_agents(monkeyp
             fresh = datetime.now(UTC) - timedelta(hours=1)
             stale = await _seed_agent(
                 session,
-                email="agent-studio-harness@a2acloud.io",
+                email="agent-studio-harness@example.com",
                 name="studio-harness-0604l",
                 created_at=old,
             )
             await _seed_agent(
                 session,
-                email="agent-studio-harness@a2acloud.io",
+                email="agent-studio-harness@example.com",
                 name="studio-harness-fresh",
                 created_at=fresh,
             )
@@ -94,13 +94,13 @@ async def test_harness_cleanup_deletes_only_stale_private_harness_agents(monkeyp
             )
             await _seed_agent(
                 session,
-                email="agent-studio-harness@a2acloud.io",
+                email="agent-studio-harness@example.com",
                 name="animation-engineer",
                 created_at=old,
             )
             await _seed_agent(
                 session,
-                email="agent-studio-harness@a2acloud.io",
+                email="agent-studio-harness@example.com",
                 name="studio-harness-public",
                 created_at=old,
                 public=True,
@@ -139,7 +139,7 @@ async def test_harness_cleanup_keeps_record_when_external_cleanup_fails(monkeypa
         async with Session() as session:
             await _seed_agent(
                 session,
-                email="agent-studio-harness@a2acloud.io",
+                email="agent-studio-harness@example.com",
                 name="studio-harness-0604l",
                 created_at=datetime.now(UTC) - timedelta(days=2),
             )

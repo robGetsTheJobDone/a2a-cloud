@@ -33,7 +33,8 @@ def load_settings() -> Settings:
         gitea_internal=os.environ.get(
             "A2A_GITEA_INTERNAL", "http://gitea-http.gitea.svc.cluster.local:3000"
         ),
-        gitea_public=os.environ.get("A2A_GITEA_PUBLIC", "http://gitea.a2acloud.io"),
+        gitea_public=os.environ.get("A2A_GITEA_PUBLIC")
+        or f"https://gitea.{os.environ.get('A2A_PLATFORM_DOMAIN', 'example.com')}",
         litellm_url=os.environ.get(
             "A2A_LITELLM_URL", "http://litellm.llm.svc.cluster.local:4000"
         ),

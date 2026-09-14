@@ -608,14 +608,14 @@ def _expected_image_for_deploy(agent: Agent, deploy: AgentDeployment) -> str | N
     if _is_pinned_managed_agent_image(image, agent.name):
         return image
     if deploy.head_sha and _is_managed_agent_image(image, agent.name):
-        return f"registry.a2acloud.io/agents/{agent.name}:{deploy.head_sha}"
+        return settings.agent_image(agent.name, deploy.head_sha)
     return image or None
 
 
 def _is_pinned_managed_agent_image(image: str | None, agent_name: str) -> bool:
     if not image:
         return False
-    prefix = f"registry.a2acloud.io/agents/{agent_name}:"
+    prefix = settings.agent_image_prefix(agent_name)
     if not image.startswith(prefix):
         return False
     return image.removeprefix(prefix) != "latest"
@@ -624,7 +624,7 @@ def _is_pinned_managed_agent_image(image: str | None, agent_name: str) -> bool:
 def _is_managed_agent_image(image: str | None, agent_name: str) -> bool:
     if not image:
         return False
-    return image.startswith(f"registry.a2acloud.io/agents/{agent_name}:")
+    return image.startswith(settings.agent_image_prefix(agent_name))
 
 
 async def _upsert_progress_event(

@@ -66,7 +66,7 @@ def test_external_card_import_normalizes_protocol_card(monkeypatch) -> None:
 def _hosted_agent(name: str) -> Agent:
     return Agent(
         name=name,
-        image=f"registry.a2acloud.io/agents/{name}:latest",
+        image=f"registry.example.com/agents/{name}:latest",
         public=True,
         url=agents._canonical_url(name),
         card={},
@@ -86,7 +86,7 @@ class _JsonRequest:
         self._body = body
         self.headers = {
             "host": "internal.svc.cluster.local",
-            "x-forwarded-host": "app.a2acloud.io",
+            "x-forwarded-host": "app.example.com",
             "x-forwarded-proto": "https",
         }
 

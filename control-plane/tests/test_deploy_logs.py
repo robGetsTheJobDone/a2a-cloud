@@ -179,8 +179,8 @@ async def _seed(session) -> AgentDeployment:
         description="Agent X",
         status="building",
         version="0.1.0",
-        image="registry.a2acloud.io/agents/agent-x:latest",
-        url="https://agent-x.a2acloud.io",
+        image="registry.example.com/agents/agent-x:latest",
+        url="https://agent-x.example.com",
         public=False,
         card={},
     )

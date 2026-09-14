@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 META_READER_USER = os.environ.get("A2A_CP_GITEA_META_READER", "meta-agent-reader")
 META_WRITER_USER = os.environ.get("A2A_CP_GITEA_META_WRITER", "meta-agent-writer")
 META_USER_EMAIL_DOMAIN = os.environ.get(
-    "A2A_CP_GITEA_META_EMAIL_DOMAIN", "meta.a2acloud.local"
+    "A2A_CP_GITEA_META_EMAIL_DOMAIN", "meta.a2a.local"
 )
 
 _ADMIN_AUTH = (GITEA_USER, GITEA_PASS)

@@ -29,7 +29,7 @@ class _Request:
         self._body = body
         self.headers = {
             "host": "internal.svc.cluster.local",
-            "x-forwarded-host": "app.a2acloud.io",
+            "x-forwarded-host": "app.example.com",
             "x-forwarded-proto": "https",
         }
 
@@ -78,7 +78,7 @@ class _EndpointRequest:
         self.method = method
         self.headers = {
             "host": "internal.svc.cluster.local",
-            "x-forwarded-host": "app.a2acloud.io",
+            "x-forwarded-host": "app.example.com",
             "x-forwarded-proto": "https",
             "content-type": "application/json",
             **(headers or {}),
@@ -162,7 +162,7 @@ async def _seed_agent(session, *, public: bool = True) -> tuple[User, Agent]:
         image="registry.example/reporter:latest",
         public=public,
         status="running",
-        url="https://reporter.a2acloud.io",
+        url="https://reporter.example.com",
         card={
             "description": "Build reports",
             "runtime": {"llm_provisioning": "caller_provided"},
@@ -566,7 +566,7 @@ async def test_agent_openapi_public_agent_survives_a_foreign_app_token() -> None
                 image="registry.example/publicbot:latest",
                 public=True,
                 status="running",
-                url="https://publicbot.a2acloud.io",
+                url="https://publicbot.example.com",
                 card=dict(agent.card),
             )
             session.add(public)
@@ -769,7 +769,7 @@ async def test_agent_api_endpoint_proxy_adapts_raw_endpoint_and_forwards_cp_jwt(
                 "update": {"message": {"text": "/probe"}},
                 "headers": {
                     "host": "internal.svc.cluster.local",
-                    "x-forwarded-host": "app.a2acloud.io",
+                    "x-forwarded-host": "app.example.com",
                     "x-forwarded-proto": "https",
                     "content-type": "application/json",
                     "x-telegram-bot-api-secret-token": "secret",
@@ -802,7 +802,7 @@ async def test_agent_api_openapi_uses_skill_schemas() -> None:
             )
 
             assert spec["servers"] == [
-                {"url": "https://app.a2acloud.io/v1/agents/reporter/api"}
+                {"url": "https://app.example.com/v1/agents/reporter/api"}
             ]
             path = spec["paths"]["/invoke/build_report"]["post"]
             assert path["security"] == [{"AgentApiToken": []}]
@@ -1120,7 +1120,7 @@ async def test_agent_api_invoke_mints_output_grant_and_normalizes_files(monkeypa
                 "/http-build_report/report.csv"
             )
             assert response["file_outputs"][0]["download_url"].startswith(
-                "https://app.a2acloud.io/v1/agents/reporter/api/files/outputs/api/reporter/"
+                "https://app.example.com/v1/agents/reporter/api/files/outputs/api/reporter/"
             )
     finally:
         await engine.dispose()
@@ -1145,7 +1145,7 @@ async def test_agent_builder_api_grant_includes_target_workspace_prefix(
                 image="registry.example/agent-builder:latest",
                 public=True,
                 status="running",
-                url="https://agent-builder.a2acloud.io",
+                url="https://agent-builder.example.com",
                 card={"skills": [{"name": "build"}]},
             )
             session.add_all([user, agent])
@@ -1217,7 +1217,7 @@ async def test_agent_api_grant_includes_skill_declared_workspace_prefixes(
                 image="registry.example/agent-studio:latest",
                 public=False,
                 status="running",
-                url="https://agent-studio.a2acloud.io",
+                url="https://agent-studio.example.com",
                 card={
                     "skills": [
                         {
@@ -1298,7 +1298,7 @@ async def test_agent_api_platform_llm_agent_receives_llm_creds(monkeypatch) -> N
                 image="registry.example/code-editor-agent:latest",
                 public=False,
                 status="running",
-                url="https://code-editor-agent.a2acloud.io",
+                url="https://code-editor-agent.example.com",
                 card={
                     "runtime": {"llm_provisioning": "platform_or_caller_provided"},
                     "skills": [{"name": "turn"}],
@@ -1486,7 +1486,7 @@ async def test_agent_api_async_run_creates_job_and_polls_result(monkeypatch) -> 
             assert run["status"] == "queued"
             assert run["run_id"].startswith("api-")
             assert run["poll_url"] == (
-                f"https://app.a2acloud.io/v1/agents/reporter/api/runs/{run['run_id']}"
+                f"https://app.example.com/v1/agents/reporter/api/runs/{run['run_id']}"
             )
 
             await agents._execute_agent_api_run_job(
@@ -1506,7 +1506,7 @@ async def test_agent_api_async_run_creates_job_and_polls_result(monkeypatch) -> 
             assert polled["result"]["result"] == {"summary": "build_report: sales"}
             assert polled["result"]["grant_id"] == "grant-async"
             assert polled["result"]["file_outputs"][0]["download_url"].startswith(
-                "https://app.a2acloud.io/v1/agents/reporter/api/files/outputs/api/reporter/"
+                "https://app.example.com/v1/agents/reporter/api/files/outputs/api/reporter/"
             )
             receipt_row = (await session.execute(select(AgentReceipt))).scalar_one()
             receipt = verify_receipt(receipt_row.signed_token)
@@ -1823,7 +1823,7 @@ async def test_agent_api_token_is_scoped_to_agent() -> None:
                 image="registry.example/other:latest",
                 public=True,
                 status="running",
-                url="https://other.a2acloud.io",
+                url="https://other.example.com",
                 card={"skills": [{"name": "build_report"}]},
             )
             session.add(other)

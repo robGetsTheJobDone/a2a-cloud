@@ -21,6 +21,7 @@ import time
 from typing import Any, Awaitable, Callable
 
 from ..agent import A2AAgent, SkillInputError, SkillNotFound, SkillSpec
+from ..cli import platform as _platform
 from ..auth import NoAuth
 from ..context import LLMCreds, LocalRunContext, MissingScopes, RunContext
 from ..consumer_setup_runtime import (
@@ -218,7 +219,7 @@ async def _apply_llm_creds(
         detail = str(exc)
         message = (
             "Platform-funded calls are exhausted. Add your model key at "
-            "https://app.a2acloud.io/llm-keys to continue."
+            f"{_platform.dashboard_url()}/llm-keys to continue."
             if "platform_trial_exhausted" in detail
             else (
                 "LLM key required. Add an LLM credential in Settings > "

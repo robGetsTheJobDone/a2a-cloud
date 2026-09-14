@@ -114,7 +114,7 @@ class GiteaBackend:
         ref: str = "main",
         token: str,
         author_name: str = "a2a-cloud",
-        author_email: str = "noreply@a2acloud.io",
+        author_email: str | None = None,
         commit_prefix: str = "",
     ) -> None:
         self._base = gitea_url.rstrip("/")
@@ -122,6 +122,10 @@ class GiteaBackend:
         self._repo = repo
         self._ref = ref
         self._token = token
+        if author_email is None:
+            from .cli.platform import noreply_email
+
+            author_email = noreply_email()
         self._author = {"name": author_name, "email": author_email}
         self._commit_prefix = commit_prefix
         self._tree_cache: dict[str, list[_TreeEntry]] | None = None

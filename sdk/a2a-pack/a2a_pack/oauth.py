@@ -21,7 +21,6 @@ from typing import Any
 # module (for the PRM document, challenge header, or config) never hard-requires
 # the dependency — only actual Keycloak token validation does.
 
-_DEFAULT_ISSUER = "https://auth.a2acloud.io/realms/a2acloud"
 
 
 def oauth_enabled() -> bool:
@@ -34,7 +33,9 @@ def oauth_enabled() -> bool:
 
 
 def oauth_issuer() -> str:
-    return os.environ.get("A2A_OAUTH_ISSUER", _DEFAULT_ISSUER).rstrip("/")
+    from .cli.platform import oauth_issuer as _derived_issuer
+
+    return _derived_issuer()
 
 
 def oauth_jwks_url() -> str:

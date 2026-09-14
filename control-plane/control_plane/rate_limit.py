@@ -41,7 +41,7 @@ and both are load-bearing:
 * escapable-by-its-owner makes the ceiling opt-in for the attacker. An earlier
   revision of :func:`_account_key` fell back to ``sha256(token)`` for anything
   it could not verify, which keyed the bucket on the credential *string*.
-  Refresh-token rotation is disabled in realm ``a2acloud``, so one refresh
+  Refresh-token rotation is disabled in the platform realm, so one refresh
   token mints an unbounded stream of fresh Keycloak access tokens - and each
   one was a brand-new budget. Identity now comes from a verified subject
   instead: :func:`_platform_subject` for the control plane's own HS256 tokens,
@@ -118,7 +118,7 @@ class RateLimitRule:
 # (``secrets.token_urlsafe(32)``) one-time browser exchange code and the
 # same-origin confirmation that consumes it. This is the only place in the
 # control plane with anything brute-forceable at all - there is no password
-# login here, Keycloak owns that at ``auth.a2acloud.io``.
+# login here, Keycloak owns that at ``auth.<platform_domain>``.
 #
 # 120/5min is 24/min per address. A CLI login redeems exactly once, so this is
 # 120 sign-ins per five minutes from a single address: a NAT'd office, VPN
@@ -154,7 +154,7 @@ AUTH_FLOW = RateLimitRule(
 
 # ``POST /v1/auth/agent-session/exchange`` is keyed on the *agent* it names, not
 # on the address, and that is not a stylistic choice: ``k8s.py`` injects
-# ``A2A_CP_URL=https://api.a2acloud.io`` (``settings.public_cp_url``) into every
+# ``A2A_CP_URL=https://api.<platform_domain>`` (``settings.public_cp_url``) into every
 # hosted agent pod, and ``a2a_pack/serve/asgi.py`` posts here once per visitor
 # sign-in. Those calls hairpin out through the cluster's egress address, so an
 # IP key would put *every hosted agent on the platform* in one bucket - a
@@ -508,7 +508,7 @@ def _keycloak_subject(token: str) -> str | None:
     """``sub`` of a signature-verified Keycloak access token, or ``None``.
 
     This is the fix for the bypass that made every account-scoped ceiling
-    opt-in: refresh-token rotation is disabled in realm ``a2acloud``, so a
+    opt-in: refresh-token rotation is disabled in the platform realm, so a
     holder can mint a new access token whenever they like. Keying on the token
     string handed each one a fresh budget; keying on the verified ``sub`` does
     not. ``keycloak_auth`` caches the realm JWKS, so the steady-state cost is a
