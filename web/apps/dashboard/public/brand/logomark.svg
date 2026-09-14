@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+<title>a2a logomark</title>
+    <defs>
+      <linearGradient id="bg" x1="130" y1="70" x2="930" y2="980" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#101722"/>
+        <stop offset="0.48" stop-color="#080b10"/>
+        <stop offset="1" stop-color="#1f1726"/>
+      </linearGradient>
+      <radialGradient id="haloA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(262 286) rotate(42) scale(360)">
+        <stop stop-color="#46f0d4" stop-opacity="0.52"/>
+        <stop offset="1" stop-color="#46f0d4" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="haloB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(760 720) rotate(42) scale(380)">
+        <stop stop-color="#ffd166" stop-opacity="0.42"/>
+        <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="bridge" x1="224" y1="290" x2="800" y2="748" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#46f0d4"/>
+        <stop offset="0.52" stop-color="#9b7cff"/>
+        <stop offset="1" stop-color="#ffd166"/>
+      </linearGradient>
+      <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+        <feGaussianBlur stdDeviation="18" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+    <rect x="48" y="48" width="928" height="928" rx="220" fill="url(#bg)"/>
+    <rect x="48" y="48" width="928" height="928" rx="220" fill="url(#haloA)"/>
+    <rect x="48" y="48" width="928" height="928" rx="220" fill="url(#haloB)"/>
+    <path d="M238 320 C356 202 511 253 512 512 C513 771 668 822 786 704"
+      fill="none" stroke="#46f0d4" stroke-opacity="0.42" stroke-width="34"
+      stroke-linecap="round"/>
+    <path d="M238 704 C356 822 511 771 512 512 C513 253 668 202 786 320"
+      fill="none" stroke="#ffd166" stroke-opacity="0.42" stroke-width="34"
+      stroke-linecap="round"/>
+    <path d="M326 355 C386 278 514 264 610 316 C704 367 723 477 634 552 L396 752 L696 752"
+      fill="none" stroke="#f8fafc" stroke-width="78" stroke-linecap="round"
+      stroke-linejoin="round" filter="url(#softGlow)"/>
+    <path d="M238 320 C378 222 512 292 512 512 C512 732 646 802 786 704"
+      fill="none" stroke="url(#bridge)" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="238" cy="320" r="74" fill="#46f0d4"/>
+    <circle cx="786" cy="704" r="74" fill="#ffd166"/>
+    <circle cx="512" cy="512" r="58" fill="#9b7cff"/>
+    <circle cx="238" cy="320" r="28" fill="#080b10" fill-opacity="0.72"/>
+    <circle cx="786" cy="704" r="28" fill="#080b10" fill-opacity="0.72"/>
+    <circle cx="512" cy="512" r="22" fill="#080b10" fill-opacity="0.72"/>
+</svg>

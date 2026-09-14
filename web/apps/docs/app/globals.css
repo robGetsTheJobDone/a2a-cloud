@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: #0a0a0a;
+  color: #f5f5f5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Highlight.js dark theme — minimal subset. */
+.hljs { background: #0a0a0a; color: #e5e5e5; }
+.hljs-keyword, .hljs-built_in { color: #a78bfa; }
+.hljs-string { color: #67e8f9; }
+.hljs-number { color: #f0abfc; }
+.hljs-comment { color: #525252; font-style: italic; }
+.hljs-title, .hljs-function .hljs-title { color: #f0abfc; }
+.hljs-params { color: #d4d4d4; }
+.hljs-meta { color: #a3a3a3; }
+
+/* Prose tweaks — Tailwind typography isn't installed, do it manually. */
+.prose h1 { @apply mt-2 mb-6 text-3xl font-semibold tracking-tight text-neutral-50; }
+.prose h2 { @apply mt-10 mb-3 text-xl font-semibold tracking-tight text-neutral-100 border-b border-neutral-900 pb-2; }
+.prose h3 { @apply mt-8 mb-2 text-base font-semibold text-neutral-100; }
+.prose h4 { @apply mt-6 mb-2 text-sm font-semibold text-neutral-200; }
+.prose p  { @apply my-4 text-neutral-300 leading-relaxed; }
+.prose ul { @apply my-4 list-disc pl-6 space-y-1.5 text-neutral-300; }
+.prose ol { @apply my-4 list-decimal pl-6 space-y-1.5 text-neutral-300; }
+.prose li { @apply leading-relaxed; }
+.prose a  { @apply text-cyan-300 hover:text-cyan-200 underline-offset-2 hover:underline; }
+.prose strong { @apply text-neutral-50 font-semibold; }
+.prose em { @apply text-neutral-300; }
+.prose code:not(pre code) {
+  @apply rounded bg-neutral-900 px-1.5 py-0.5 text-[0.9em] font-mono text-violet-300 border border-neutral-800;
+}
+.prose pre {
+  @apply my-5 overflow-x-auto rounded-lg border border-neutral-800 bg-neutral-950 p-4 text-[13px] leading-relaxed;
+}
+.prose pre code { @apply font-mono text-neutral-200 bg-transparent border-0 p-0; }
+.prose blockquote {
+  @apply my-5 border-l-2 border-violet-500/50 bg-violet-500/5 pl-4 py-1 italic text-neutral-300;
+}
+.prose table { @apply my-5 w-full border-collapse text-sm; }
+.prose th { @apply border-b border-neutral-800 px-3 py-2 text-left text-xs uppercase tracking-wider text-neutral-400; }
+.prose td { @apply border-b border-neutral-900 px-3 py-2 text-neutral-300; }
+.prose hr { @apply my-8 border-neutral-900; }

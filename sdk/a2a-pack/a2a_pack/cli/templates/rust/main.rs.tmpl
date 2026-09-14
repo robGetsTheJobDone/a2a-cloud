@@ -1,0 +1,37 @@
+use std::env;
+
+use a2a_pack_rs::{
+    compile_agent, serve_agent, A2AAgent, AgentDefinition, SumRequest, SumResponse,
+};
+
+pub struct {{ class_name }};
+
+impl A2AAgent for {{ class_name }} {
+    fn definition(&self) -> AgentDefinition {
+        AgentDefinition {
+            name: "{{ name }}",
+            description: "{{ description }}",
+            version: "0.1.0",
+        }
+    }
+
+    fn sum(&self, request: SumRequest) -> Result<SumResponse, String> {
+        Ok(SumResponse {
+            value: request.left + request.right,
+        })
+    }
+}
+
+fn main() {
+    let agent = {{ class_name }};
+    let mode = env::args().nth(1).unwrap_or_else(|| "worker".to_string());
+    let result = match mode.as_str() {
+        "compile" => compile_agent(&agent),
+        "worker" => serve_agent(agent),
+        other => Err(format!("unknown mode {other:?}; use compile or worker")),
+    };
+    if let Err(error) = result {
+        eprintln!("{error}");
+        std::process::exit(1);
+    }
+}

@@ -1,0 +1,39 @@
+import { cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+
+const standalone = ".next/standalone";
+const staticSource = ".next/static";
+const publicSource = "public";
+
+function copyDir(source, target) {
+  if (!existsSync(source)) {
+    return;
+  }
+  mkdirSync(target, { recursive: true });
+  cpSync(source, target, { recursive: true });
+}
+
+function serverDirs() {
+  if (!existsSync(standalone)) {
+    return [];
+  }
+  const dirs = [];
+  if (existsSync(join(standalone, "server.js"))) {
+    dirs.push(standalone);
+  }
+  for (const entry of readdirSync(standalone, { withFileTypes: true })) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const candidate = join(standalone, entry.name);
+    if (existsSync(join(candidate, "server.js"))) {
+      dirs.push(candidate);
+    }
+  }
+  return dirs;
+}
+
+for (const dir of serverDirs()) {
+  copyDir(staticSource, join(dir, ".next/static"));
+  copyDir(publicSource, join(dir, "public"));
+}

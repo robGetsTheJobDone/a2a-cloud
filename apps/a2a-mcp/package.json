@@ -1,0 +1,35 @@
+{
+  "name": "a2amcp",
+  "version": "0.1.11",
+  "description": "MCP gateway for a2acloud agents. Run as a local MCP server; expose any number of deployed A2A agents to Claude Code, Cursor, and other MCP clients.",
+  "type": "module",
+  "bin": {
+    "a2amcp": "dist/cli.js",
+    "a2a-mcp": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "test": "node --test --import tsx tests/*.test.ts",
+    "dev": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  },
+  "license": "Apache-2.0"
+}

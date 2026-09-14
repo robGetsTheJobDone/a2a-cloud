@@ -1,0 +1,126 @@
+{
+  "source": {
+    "package": "a2a-pack",
+    "version": "0.1.116",
+    "repo_path": "sdk/a2a-pack",
+    "tree_sha256": "7133ee0672ca9305f7909f61ef2bc85d6607c4d78d1dad3fe7b7159cf1a86cc4"
+  },
+  "generated": [
+    "agent",
+    "context",
+    "grants",
+    "workspace",
+    "runtime",
+    "card",
+    "frontend",
+    "a2a_client",
+    "discovery",
+    "sandbox",
+    "auth",
+    "serve-asgi",
+    "cli-main",
+    "cli-local",
+    "cli-dev_server",
+    "deepagents",
+    "mcp-http",
+    "mcp-server",
+    "cli"
+  ],
+  "items": [
+    {
+      "slug": "a2a_client",
+      "title": "A2A Client",
+      "path": "reference/a2a_client.md"
+    },
+    {
+      "slug": "agent",
+      "title": "Agent",
+      "path": "reference/agent.md"
+    },
+    {
+      "slug": "auth",
+      "title": "Auth",
+      "path": "reference/auth.md"
+    },
+    {
+      "slug": "card",
+      "title": "Card",
+      "path": "reference/card.md"
+    },
+    {
+      "slug": "cli",
+      "title": "Cli",
+      "path": "reference/cli.md"
+    },
+    {
+      "slug": "cli-dev_server",
+      "title": "Cli Dev Server",
+      "path": "reference/cli-dev_server.md"
+    },
+    {
+      "slug": "cli-local",
+      "title": "Cli Local",
+      "path": "reference/cli-local.md"
+    },
+    {
+      "slug": "cli-main",
+      "title": "Cli Main",
+      "path": "reference/cli-main.md"
+    },
+    {
+      "slug": "context",
+      "title": "Context",
+      "path": "reference/context.md"
+    },
+    {
+      "slug": "deepagents",
+      "title": "Deepagents",
+      "path": "reference/deepagents.md"
+    },
+    {
+      "slug": "discovery",
+      "title": "Discovery",
+      "path": "reference/discovery.md"
+    },
+    {
+      "slug": "frontend",
+      "title": "Frontend",
+      "path": "reference/frontend.md"
+    },
+    {
+      "slug": "grants",
+      "title": "Grants",
+      "path": "reference/grants.md"
+    },
+    {
+      "slug": "mcp-http",
+      "title": "Mcp Http",
+      "path": "reference/mcp-http.md"
+    },
+    {
+      "slug": "mcp-server",
+      "title": "Mcp Server",
+      "path": "reference/mcp-server.md"
+    },
+    {
+      "slug": "runtime",
+      "title": "Runtime",
+      "path": "reference/runtime.md"
+    },
+    {
+      "slug": "sandbox",
+      "title": "Sandbox",
+      "path": "reference/sandbox.md"
+    },
+    {
+      "slug": "serve-asgi",
+      "title": "Serve Asgi",
+      "path": "reference/serve-asgi.md"
+    },
+    {
+      "slug": "workspace",
+      "title": "Workspace",
+      "path": "reference/workspace.md"
+    }
+  ]
+}

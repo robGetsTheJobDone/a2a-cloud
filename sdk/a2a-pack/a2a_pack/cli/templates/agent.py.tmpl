@@ -1,0 +1,183 @@
+"""{{ name }} agent.
+
+Starter stack:
+  - DeepAgents for tool-calling orchestration
+  - Caller-provided LLM credentials via ctx.llm
+  - A tiny model-call middleware hook you can replace with tracing,
+    routing, rate limits, or policy checks
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from pydantic import BaseModel
+
+import a2a_pack as a2a
+from a2a_pack import (
+    A2AAgent,
+    LLMProvisioning,
+    {{ auth_type }},
+    RunContext,
+    WorkspaceAccess,
+    WorkspaceMode,
+)
+from a2a_pack.context import LLMCreds
+
+
+class {{ class_name }}Config(BaseModel):
+    pass
+
+
+SYSTEM_PROMPT = """\
+You are a compact tool-calling agent.
+
+Use the text_stats tool when the user asks about text, counts, summaries,
+or anything where exact length/word numbers would help. Mention tool results
+briefly instead of dumping raw JSON.
+"""
+
+RUNTIME_SKILLS_DIR = "{{ name }}/.deepagents/skills/"
+DEEPAGENTS_RECURSION_LIMIT = 500
+
+
+class {{ class_name }}(A2AAgent[{{ class_name }}Config, {{ auth_type }}]):
+    name = "{{ name }}"
+    description = "{{ description }}"
+    version = "0.1.0"
+
+    config_model = {{ class_name }}Config
+    auth_model = {{ auth_type }}
+
+    # Hosted generated agents read the caller's saved LLM credential through
+    # ctx.llm. The platform may proxy that credential through LiteLLM, but agent
+    # code never reads provider keys, LiteLLM master keys, or OPENAI_API_KEY
+    # directly.
+    llm_provisioning = LLMProvisioning.PLATFORM
+    workspace_access = WorkspaceAccess.dynamic(
+        max_files=64,
+        allowed_modes=(WorkspaceMode.READ_ONLY, WorkspaceMode.READ_WRITE_OVERLAY),
+        require_reason=False,
+    )
+    tools_used = ("deepagents", "langchain")
+
+    @a2a.tool(description="Ask the starter DeepAgent to answer with tool calls when useful")
+    async def ask(self, ctx: RunContext[{{ auth_type }}], prompt: str) -> str:
+        creds = ctx.llm
+        await ctx.emit_progress(f"llm: {creds.model} via {creds.source}")
+        if not creds.api_key:
+            return (
+                "LLM key required. Add an LLM credential in Settings > LLM "
+                "credentials before running this agent; for local --invoke "
+                "runs set AGENT_LLM_KEY."
+            )
+        graph = self._build_deep_agent(ctx=ctx, creds=creds)
+        state = await graph.ainvoke(
+            {"messages": [{"role": "user", "content": prompt}]},
+            config={"recursion_limit": DEEPAGENTS_RECURSION_LIMIT},
+        )
+        await ctx.emit_progress("deepagent finished")
+        return _last_message_text(state)
+
+    def _build_deep_agent(
+        self,
+        *,
+        ctx: RunContext[{{ auth_type }}],
+        creds: LLMCreds,
+    ) -> Any:
+        # Lazy imports keep `a2a card` usable before local dependencies are
+        # installed. `a2a deploy` installs requirements.txt during the build.
+        from a2a_pack.deepagents import create_a2a_deep_agent
+        from langchain.agents.middleware import wrap_model_call
+        from langchain_core.tools import tool
+
+        @tool
+        def text_stats(text: str) -> str:
+            """Return exact word, character, and line counts for text."""
+            words = [part for part in text.split() if part.strip()]
+            return json.dumps(
+                {
+                    "characters": len(text),
+                    "words": len(words),
+                    "lines": len(text.splitlines()) or 1,
+                }
+            )
+
+        @wrap_model_call
+        async def log_model_call(request: Any, handler: Any) -> Any:
+            messages = request.state.get("messages", [])
+            print(
+                "[middleware] model_call "
+                f"model={creds.model} source={creds.source} messages={len(messages)}"
+            )
+            return await handler(request)
+
+        backend = ctx.workspace_backend()
+        skill_sources = _seed_runtime_skills(backend, ctx)
+        # create_a2a_deep_agent resolves provider:model strings with
+        # langchain.init_chat_model from ctx.llm, preserving LiteLLM routing,
+        # provider-specific extra body, and runtime model overrides.
+        return create_a2a_deep_agent(
+            ctx,
+            creds=creds,
+            backend=backend,
+            skills=skill_sources or None,
+            tools=[text_stats],
+            middleware=[log_model_call],
+            system_prompt=SYSTEM_PROMPT,
+        )
+
+
+def _runtime_skills_root(ctx: RunContext[Any]) -> str:
+    workspace = getattr(ctx, "_workspace", None)
+    prefixes = tuple(getattr(workspace, "write_prefixes", ()) or ())
+    if not prefixes:
+        outputs_prefix = getattr(workspace, "outputs_prefix", None)
+        prefixes = (outputs_prefix or "outputs/",)
+    prefix = str(prefixes[0]).strip("/")
+    return f"/{prefix}/{RUNTIME_SKILLS_DIR}" if prefix else f"/{RUNTIME_SKILLS_DIR}"
+
+
+def _seed_runtime_skills(backend: Any, ctx: RunContext[Any]) -> list[str]:
+    """Copy packaged DeepAgents skills into the invocation workspace.
+
+    DeepAgents loads skills from its backend, while source-controlled
+    ``skills/`` folders live in the image. This bridge lets generated agents
+    ship reusable SKILL.md bundles without giving up durable A2A workspace
+    files.
+    """
+    root = Path(__file__).parent / "skills"
+    if not root.exists():
+        return []
+    runtime_skills_root = _runtime_skills_root(ctx)
+    uploads: list[tuple[str, bytes]] = []
+    for path in root.rglob("*"):
+        if path.is_file():
+            rel = path.relative_to(root).as_posix()
+            uploads.append((runtime_skills_root + rel, path.read_bytes()))
+    if uploads:
+        backend.upload_files(uploads)
+        return [runtime_skills_root]
+    return []
+
+
+def _last_message_text(state: dict[str, Any]) -> str:
+    messages = state.get("messages") or []
+    if not messages:
+        return json.dumps(state, default=str)
+
+    content = getattr(messages[-1], "content", None)
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, dict):
+                text = item.get("text") or item.get("content")
+                if text:
+                    parts.append(str(text))
+            elif item:
+                parts.append(str(item))
+        return "\n".join(parts) if parts else json.dumps(content, default=str)
+    return str(content or messages[-1])

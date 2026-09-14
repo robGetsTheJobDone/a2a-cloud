@@ -1,0 +1,133 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+const CONFIG_URL = "/config.json";
+
+async function requestJson(url, init = {}) {
+  const response = await fetch(url, { credentials: "same-origin", ...init });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const detail = data && (data.detail || data.message);
+    throw new Error(detail || `request failed: ${response.status}`);
+  }
+  return data;
+}
+
+function numberDefault(schema, fallback) {
+  if (!schema || typeof schema !== "object") return fallback;
+  if (typeof schema.default === "number") return schema.default;
+  return fallback;
+}
+
+export default function Home() {
+  const [config, setConfig] = useState(null);
+  const [left, setLeft] = useState(2);
+  const [right, setRight] = useState(3);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    requestJson(CONFIG_URL)
+      .then((data) => {
+        setConfig(data);
+        const sum = data.skills?.find((skill) => skill.name === "sum") || data.skills?.[0];
+        const props = sum?.input_schema?.properties || sum?.inputSchema?.properties || {};
+        setLeft(numberDefault(props.left, 2));
+        setRight(numberDefault(props.right, 3));
+      })
+      .catch((err) => setError(err.message || String(err)));
+  }, []);
+
+  const skill = useMemo(
+    () => config?.skills?.find((item) => item.name === "sum") || config?.skills?.[0],
+    [config],
+  );
+
+  async function runSkill(event) {
+    event.preventDefault();
+    if (!config || !skill) return;
+    setRunning(true);
+    setError("");
+    setResult(null);
+    try {
+      const payload = await requestJson(
+        `${config.endpoints.invoke}/${encodeURIComponent(skill.name)}`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ arguments: { left, right } }),
+        },
+      );
+      setResult(payload.result ?? payload);
+    } catch (err) {
+      setError(err.message || String(err));
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <main className="shell">
+      <section className="sidebar">
+        <p className="eyebrow">A2A Next.js app</p>
+        <h1>{{ name }}</h1>
+        <p className="description">
+          A native TypeScript agent and a packed Next.js frontend deployed as one A2A app.
+        </p>
+        <div className="meta">
+          <span>Route</span>
+          <strong>/app</strong>
+          <span>Skill</span>
+          <strong>{skill?.name || "loading"}</strong>
+        </div>
+      </section>
+
+      <section className="workspace">
+        <div className="toolbar">
+          <div>
+            <p className="eyebrow">Skill runner</p>
+            <h2>{skill?.description || "Load agent contract"}</h2>
+          </div>
+          <span className="status">{config ? "connected" : "loading"}</span>
+        </div>
+
+        <form className="runner" onSubmit={runSkill}>
+          <label>
+            Left
+            <input
+              inputMode="decimal"
+              type="number"
+              value={left}
+              onChange={(event) => setLeft(Number(event.target.value))}
+            />
+          </label>
+          <label>
+            Right
+            <input
+              inputMode="decimal"
+              type="number"
+              value={right}
+              onChange={(event) => setRight(Number(event.target.value))}
+            />
+          </label>
+          <button disabled={!config || !skill || running} type="submit">
+            {running ? "Running" : "Run skill"}
+          </button>
+        </form>
+
+        <section className="output">
+          <h3>Result</h3>
+          <pre>{error || JSON.stringify(result ?? { value: left + right }, null, 2)}</pre>
+        </section>
+
+        <section className="output">
+          <h3>Agent contract</h3>
+          <pre>{JSON.stringify(config?.agent || {}, null, 2)}</pre>
+        </section>
+      </section>
+    </main>
+  );
+}

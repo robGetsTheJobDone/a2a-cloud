@@ -1,0 +1,6 @@
+# Pinned to the litellm proxy image tag in runtime-llm/litellm.yaml
+# (ghcr.io/berriai/litellm:vX.Y.Z). Bump together, then regenerate:
+#   python -m venv .venv
+#   .venv/bin/pip install -r requirements-providers.txt
+#   .venv/bin/python gen_litellm_providers.py
+litellm==1.87.0

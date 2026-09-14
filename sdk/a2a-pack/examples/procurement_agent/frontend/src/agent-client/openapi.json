@@ -1,0 +1,1455 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "procurement-agent Skills API",
+    "description": "Turns supplier quotes into durable procurement memory, approvals, and recommendations.",
+    "version": "0.1.0"
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "paths": {
+    "/invoke/ingest_quote_payloads": {
+      "post": {
+        "operationId": "invokeIngestQuotePayloads",
+        "summary": "Ingest browser-uploaded quote payloads into structured procurement memory.",
+        "description": "Ingest browser-uploaded quote payloads into structured procurement memory.",
+        "tags": [
+          "skills"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-a2a-skill": "ingest_quote_payloads",
+        "x-a2a-scopes": [],
+        "x-a2a-stream": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "arguments": {
+                    "type": "object",
+                    "properties": {
+                      "documents": {
+                        "items": {
+                          "properties": {
+                            "filename": {
+                              "title": "Filename",
+                              "type": "string"
+                            },
+                            "data_base64": {
+                              "description": "Base64-encoded PDF or text quote bytes.",
+                              "title": "Data Base64",
+                              "type": "string"
+                            },
+                            "media_type": {
+                              "default": "application/pdf",
+                              "title": "Media Type",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "filename",
+                            "data_base64"
+                          ],
+                          "title": "QuotePayload",
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "requested_part": {
+                        "type": "string"
+                      },
+                      "requested_quantity": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "documents"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "grant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional A2A workspace/sandbox grant token."
+                  },
+                  "llm_creds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LLMCreds"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional caller-provided LLM credentials."
+                  },
+                  "composition": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/CompositionBudget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "consumer_config": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "consumer_secrets": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "cp_jwt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane JWT forwarded by trusted orchestrators."
+                  },
+                  "cp_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane base URL."
+                  }
+                },
+                "required": [
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skill invocation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "result": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentEvent"
+                      }
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentArtifact"
+                      }
+                    },
+                    "grant_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result",
+                    "events",
+                    "artifacts",
+                    "grant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid skill arguments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication succeeded but required scope or grant is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown skill.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Skill handler raised.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoke/compare_quotes": {
+      "post": {
+        "operationId": "invokeCompareQuotes",
+        "summary": "Compare current and historical quotes for a part.",
+        "description": "Compare current and historical quotes for a part.",
+        "tags": [
+          "skills"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-a2a-skill": "compare_quotes",
+        "x-a2a-scopes": [],
+        "x-a2a-stream": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "arguments": {
+                    "type": "object",
+                    "properties": {
+                      "part_query": {
+                        "type": "string"
+                      },
+                      "quantity": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "part_query"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "grant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional A2A workspace/sandbox grant token."
+                  },
+                  "llm_creds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LLMCreds"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional caller-provided LLM credentials."
+                  },
+                  "composition": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/CompositionBudget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "consumer_config": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "consumer_secrets": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "cp_jwt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane JWT forwarded by trusted orchestrators."
+                  },
+                  "cp_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane base URL."
+                  }
+                },
+                "required": [
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skill invocation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "result": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentEvent"
+                      }
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentArtifact"
+                      }
+                    },
+                    "grant_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result",
+                    "events",
+                    "artifacts",
+                    "grant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid skill arguments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication succeeded but required scope or grant is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown skill.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Skill handler raised.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoke/create_purchase_request": {
+      "post": {
+        "operationId": "invokeCreatePurchaseRequest",
+        "summary": "Create a purchase request from a recommended or selected quote.",
+        "description": "Create a purchase request from a recommended or selected quote.",
+        "tags": [
+          "skills"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-a2a-skill": "create_purchase_request",
+        "x-a2a-scopes": [],
+        "x-a2a-stream": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "arguments": {
+                    "type": "object",
+                    "properties": {
+                      "quote_line_item_id": {
+                        "type": "integer"
+                      },
+                      "quantity": {
+                        "type": "integer"
+                      },
+                      "reason": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "quote_line_item_id",
+                      "quantity"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "grant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional A2A workspace/sandbox grant token."
+                  },
+                  "llm_creds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LLMCreds"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional caller-provided LLM credentials."
+                  },
+                  "composition": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/CompositionBudget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "consumer_config": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "consumer_secrets": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "cp_jwt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane JWT forwarded by trusted orchestrators."
+                  },
+                  "cp_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane base URL."
+                  }
+                },
+                "required": [
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skill invocation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "result": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentEvent"
+                      }
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentArtifact"
+                      }
+                    },
+                    "grant_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result",
+                    "events",
+                    "artifacts",
+                    "grant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid skill arguments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication succeeded but required scope or grant is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown skill.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Skill handler raised.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoke/decide_purchase_request": {
+      "post": {
+        "operationId": "invokeDecidePurchaseRequest",
+        "summary": "Approve, reject, or request more quotes for a purchase request.",
+        "description": "Approve, reject, or request more quotes for a purchase request.",
+        "tags": [
+          "skills"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-a2a-skill": "decide_purchase_request",
+        "x-a2a-scopes": [],
+        "x-a2a-stream": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "arguments": {
+                    "type": "object",
+                    "properties": {
+                      "request_id": {
+                        "type": "integer"
+                      },
+                      "decision": {
+                        "enum": [
+                          "approve",
+                          "reject",
+                          "request_more_quotes"
+                        ],
+                        "type": "string"
+                      },
+                      "note": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "request_id",
+                      "decision"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "grant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional A2A workspace/sandbox grant token."
+                  },
+                  "llm_creds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LLMCreds"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional caller-provided LLM credentials."
+                  },
+                  "composition": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/CompositionBudget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "consumer_config": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "consumer_secrets": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "cp_jwt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane JWT forwarded by trusted orchestrators."
+                  },
+                  "cp_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane base URL."
+                  }
+                },
+                "required": [
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skill invocation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "result": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentEvent"
+                      }
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentArtifact"
+                      }
+                    },
+                    "grant_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result",
+                    "events",
+                    "artifacts",
+                    "grant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid skill arguments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication succeeded but required scope or grant is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown skill.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Skill handler raised.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoke/supplier_scorecard": {
+      "post": {
+        "operationId": "invokeSupplierScorecard",
+        "summary": "Return a supplier scorecard based on quotes and recorded outcomes.",
+        "description": "Return a supplier scorecard based on quotes and recorded outcomes.",
+        "tags": [
+          "skills"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-a2a-skill": "supplier_scorecard",
+        "x-a2a-scopes": [],
+        "x-a2a-stream": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "arguments": {
+                    "type": "object",
+                    "properties": {
+                      "supplier_name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "supplier_name"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "grant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional A2A workspace/sandbox grant token."
+                  },
+                  "llm_creds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LLMCreds"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional caller-provided LLM credentials."
+                  },
+                  "composition": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/CompositionBudget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "consumer_config": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "consumer_secrets": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "cp_jwt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane JWT forwarded by trusted orchestrators."
+                  },
+                  "cp_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane base URL."
+                  }
+                },
+                "required": [
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skill invocation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "result": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentEvent"
+                      }
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentArtifact"
+                      }
+                    },
+                    "grant_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result",
+                    "events",
+                    "artifacts",
+                    "grant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid skill arguments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication succeeded but required scope or grant is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown skill.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Skill handler raised.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/invoke/executive_dashboard": {
+      "post": {
+        "operationId": "invokeExecutiveDashboard",
+        "summary": "Return owner-level procurement KPIs for the current organization.",
+        "description": "Return owner-level procurement KPIs for the current organization.",
+        "tags": [
+          "skills"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-a2a-skill": "executive_dashboard",
+        "x-a2a-scopes": [],
+        "x-a2a-stream": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "arguments": {
+                    "type": "object",
+                    "properties": {},
+                    "required": [],
+                    "additionalProperties": false
+                  },
+                  "grant": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional A2A workspace/sandbox grant token."
+                  },
+                  "llm_creds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/LLMCreds"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Optional caller-provided LLM credentials."
+                  },
+                  "composition": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/CompositionBudget"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "consumer_config": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": true
+                  },
+                  "consumer_secrets": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "cp_jwt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane JWT forwarded by trusted orchestrators."
+                  },
+                  "cp_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Optional control-plane base URL."
+                  }
+                },
+                "required": [
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skill invocation completed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "result": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentEvent"
+                      }
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentArtifact"
+                      }
+                    },
+                    "grant_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result",
+                    "events",
+                    "artifacts",
+                    "grant_id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid skill arguments.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authentication succeeded but required scope or grant is missing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown skill.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Skill handler raised.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvokeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "kind",
+          "payload"
+        ]
+      },
+      "AgentArtifact": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name",
+          "size_bytes"
+        ]
+      },
+      "InvokeError": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "detail": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ]
+          }
+        }
+      },
+      "LLMCreds": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "base_url": {
+            "type": "string"
+          },
+          "api_key": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "temperature_mode": {
+            "type": "string",
+            "default": "default"
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "extra_body": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "metadata": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "base_url",
+          "api_key",
+          "model"
+        ]
+      },
+      "CompositionBudget": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "A2A platform session token",
+        "description": "Pass an A2A platform session token as `Authorization: Bearer <token>`."
+      }
+    }
+  },
+  "x-a2a-agent": {
+    "name": "procurement-agent",
+    "version": "0.1.0",
+    "description": "Turns supplier quotes into durable procurement memory, approvals, and recommendations."
+  },
+  "x-a2a-auth": {
+    "required": true,
+    "principal_required": true,
+    "transport_bearer_required": true,
+    "strategy": "platform_user",
+    "model": "a2a_pack.auth.PlatformUserAuth",
+    "principal_schema": {
+      "additionalProperties": false,
+      "description": "Caller authenticated by the A2A platform session.\n\nUse this for packed frontend apps that should require a logged-in A2A\nCloud user without wiring a custom OAuth/OIDC resolver.",
+      "properties": {
+        "sub": {
+          "title": "Sub",
+          "type": "string"
+        },
+        "user_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "User Id"
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Email"
+        },
+        "org_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Org Id"
+        },
+        "org_slug": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Org Slug"
+        },
+        "scopes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Scopes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sub"
+      ],
+      "title": "PlatformUserAuth",
+      "type": "object"
+    },
+    "resolver": null
+  },
+  "x-a2a-exported-skills": [
+    "ingest_quote_payloads",
+    "compare_quotes",
+    "create_purchase_request",
+    "decide_purchase_request",
+    "supplier_scorecard",
+    "executive_dashboard"
+  ]
+}

@@ -1,0 +1,59 @@
+---
+name: build-a2a-agent
+description: Add or rework a skill on this A2A Cloud agent, wire tools/LLM/workspace correctly, and ship it. Use when editing agent.py, adding a @a2a.tool, calling the LLM, writing durable files, or deploying.
+---
+
+# Build on A2A Cloud
+
+This agent runs on **A2A Cloud**. Full API reference is in `AGENTS.md` at the
+project root — read it. This skill is the step-by-step playbook.
+
+## Add a skill
+
+1. Open `agent.py`. Add an `async` method on the agent class decorated with
+   `@a2a.tool(description="...")`. The description is what the model reads to
+   decide when to call the skill — make it specific.
+2. Type every parameter (they become the input schema) and the return value.
+3. First arg after `self` is always `ctx: RunContext[<AuthModel>]`.
+
+```python
+@a2a.tool(description="Summarize text into N bullet points")
+async def summarize(self, ctx: RunContext[NoAuth], text: str, n: int = 3) -> str:
+    creds = ctx.llm
+    if not creds.api_key:
+        return "LLM key required — add an LLM credential in Settings > LLM credentials."
+    await ctx.emit_progress(f"summarizing {len(text)} chars")
+    ...
+```
+
+## The four things you'll wire
+
+- **LLM**: `ctx.llm` → `LLMCreds(model, api_key, source)`. Only sanctioned
+  credential. Never read `OPENAI_API_KEY`, `A2A_LITELLM_KEY`, or provider keys;
+  never fake a fallback. Guard on empty `api_key`.
+- **Durable files**: `ctx.workspace_backend()`, `ctx.write_artifact(...)`, or
+  `ctx.workspace`. Write intentional outputs to `/workspace/outputs/...`.
+- **Running code / CLIs**: `await ctx.workspace_shell(cmd, image="python:3.11-slim", timeout_seconds=120)`.
+  Not a plain subprocess — that output isn't durable.
+- **DeepAgents graph**: `create_a2a_deep_agent(ctx, creds=ctx.llm, backend=ctx.workspace_backend(), tools=[...], system_prompt=...)`, invoke with `config={"recursion_limit": 500}`.
+
+## Verify before shipping
+
+```bash
+a2a validate                                                  # agent loads, no errors
+a2a card                                                      # card schema is well-formed
+a2a test --invoke --skill <name> --args-json '{"...":"..."}'  # exercise the new skill
+a2a deploy                                                    # ship it
+```
+
+If `a2a validate` fails, fix the load error before anything else — the platform
+build will reject a card that doesn't compile.
+
+## Common mistakes
+
+- Reading a provider key instead of `ctx.llm` → violates platform policy; will
+  not have a key in production anyway.
+- Writing files with `open()`/`asyncio` subprocess → not durable, vanishes after
+  the request. Use the workspace backend or sandbox.
+- Vague `@a2a.tool` description → the model can't route to the skill.
+- Forgetting `config={"recursion_limit": 500}` on DeepAgents `ainvoke`.

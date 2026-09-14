@@ -1,0 +1,29 @@
+# {{ name }}
+
+{{ description }}
+
+This TypeScript project was scaffolded with `a2a init --language typescript`.
+It declares a native `A2AAgent`, compiles that declaration to
+`.a2a/agent.dsl.json`, and runs a small localhost worker that the common A2A
+sidecar invokes.
+
+## Local Setup
+
+```bash
+npm install
+npm run compile
+npm run worker
+```
+
+`npm run compile` writes `.a2a/agent.dsl.json`. The deployed container starts
+`node dist/worker.js` beside `a2a sidecar`; the public A2A/MCP endpoints are
+served by the sidecar.
+
+## Deploy
+
+```bash
+a2a deploy
+```
+
+Deploy compiles the DSL, uploads source, and lets the control plane choose the
+TypeScript sidecar build image.

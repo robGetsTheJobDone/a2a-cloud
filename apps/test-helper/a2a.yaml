@@ -1,0 +1,6 @@
+name: test-helper
+version: 0.1.0
+entrypoint: agent:TestHelperAgent
+description: Platform feature exerciser for e2e tests.
+expose:
+  public: true

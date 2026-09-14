@@ -1,0 +1,3 @@
+a2a-pack>=0.1.82
+httpx>=0.27
+openharness-ai>=0.1.7

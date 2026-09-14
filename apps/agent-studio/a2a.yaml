@@ -1,0 +1,41 @@
+name: agent-studio
+version: 0.1.31
+entrypoint: agent:AgentStudio
+description: Plan, build, browser-test, repair, and distribute managed A2A agents through platform specialists.
+runtime:
+  apt_packages: [chromium]
+  resources:
+    cpu: "2"
+    memory: 2Gi
+    max_runtime_seconds: 3600
+expose:
+  public: false
+composition:
+  planning: deterministic_dag
+  max_nodes: 8
+  max_parallel: 2
+  max_replans: 0
+  sub_agents:
+    - name: agent-builder
+      skills: [build]
+    - name: agent-reviewer
+      skills: [review]
+      required: false
+    - name: code-editor-agent
+      skills: [turn]
+      required: false
+goal:
+  objective: Plan, build, prove, and improve one managed A2A agent inside bounded user-approved budgets.
+  success_criteria:
+    - managed agent exists with a live Agent Card and production proof
+    - critical reviewer findings are absent or block success
+    - every mutation is captured in the Agent Studio ledger
+  constraints:
+    - public publish remains opt-in
+    - no unbounded recursive agent creation
+    - code-editor push_on_failure is never enabled
+memory:
+  tiers: [files]
+  namespace: agent-studio
+  scope: agent
+  retention: durable

@@ -1,0 +1,13 @@
+[package]
+name = "a2a-pack-rs"
+version = "0.1.84"
+edition = "2021"
+license = "Apache-2.0"
+description = "Rust SDK for compiling A2A Pack agents to sidecar DSL and serving worker handlers."
+homepage = "https://a2acloud.io"
+documentation = "https://docs.a2acloud.io/languages/rust"
+repository = "https://gitea.a2acloud.io/gitea_admin/a2a-pack"
+
+[lib]
+name = "a2a_pack_rs"
+path = "src/lib.rs"

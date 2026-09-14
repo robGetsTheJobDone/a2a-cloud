@@ -1,0 +1,6 @@
+name: agent-reviewer
+version: 0.1.2
+entrypoint: agent:AgentReviewer
+description: Pre-deploy audit of an A2A agent's source — security, scope, ergonomics.
+expose:
+  public: true

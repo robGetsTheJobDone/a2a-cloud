@@ -1,0 +1,2 @@
+a2a-pack>=0.1.75
+pydantic>=2.6

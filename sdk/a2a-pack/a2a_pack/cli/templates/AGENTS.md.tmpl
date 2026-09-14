@@ -1,0 +1,156 @@
+# Building on A2A Cloud — reference for coding agents
+
+You are working inside **{{ name }}**, an agent that runs on **A2A Cloud**. This
+file teaches you how to build on the platform so you can add skills, wire tools,
+and ship. It is the single source of truth; `CLAUDE.md` imports it and the
+`.claude/skills/build-a2a-agent` skill expands on it.
+
+The SDK package is `a2a-pack` (imported as `a2a_pack` / `import a2a_pack as a2a`).
+
+## Golden rules
+
+1. **Never read provider LLM keys.** Use `ctx.llm` only. Do not read
+   `OPENAI_API_KEY`, `A2A_LITELLM_KEY`, LiteLLM master keys, or any provider
+   env var, and never substitute a fake fallback key. If `ctx.llm.api_key` is
+   empty, return a message telling the caller to add an LLM credential.
+2. **Durable files go through platform paths.** Write via
+   `ctx.workspace_backend()`, `ctx.write_artifact(...)`, `ctx.workspace`, or a
+   sandbox helper. Plain `asyncio` subprocess output and raw `/tmp` writes in the
+   agent container are **not** durable and can vanish after a request.
+3. **Skills are `@a2a.tool` methods.** One capability = one decorated async
+   method on the agent class. `@a2a.tool` is canonical (since 0.1.104);
+   `@a2a.skill` is a permanent alias.
+4. **Keep it deployable.** After edits, run `a2a validate` and `a2a card`. Ship
+   with `a2a deploy`.
+
+## Anatomy of an agent
+
+```python
+import a2a_pack as a2a
+from a2a_pack import A2AAgent, RunContext, LLMProvisioning, WorkspaceAccess, WorkspaceMode, NoAuth
+from pydantic import BaseModel
+
+
+class {{ class_name }}Config(BaseModel):
+    pass
+
+
+class {{ class_name }}(A2AAgent[{{ class_name }}Config, NoAuth]):
+    name = "{{ name }}"
+    description = "{{ description }}"
+    version = "0.1.0"
+
+    config_model = {{ class_name }}Config
+    auth_model = NoAuth
+    llm_provisioning = LLMProvisioning.PLATFORM      # reads the caller's saved credential via ctx.llm
+    workspace_access = WorkspaceAccess.dynamic(
+        max_files=64,
+        allowed_modes=(WorkspaceMode.READ_ONLY, WorkspaceMode.READ_WRITE_OVERLAY),
+    )
+    tools_used = ("deepagents", "langchain")
+
+    @a2a.tool(description="Say what this skill does; the model reads this to decide when to call it")
+    async def greet(self, ctx: RunContext[NoAuth], who: str) -> str:
+        await ctx.emit_progress(f"greeting {who}")
+        return f"hello {who}"
+```
+
+The class exports an **Agent Card** (`GET /`) and an **MCP server**
+(`POST /mcp`), so once deployed any MCP client — Claude Code, Cursor, another
+agent — can call its skills.
+
+## Adding a skill
+
+Add an `async` method decorated with `@a2a.tool`. Parameters become the skill's
+input schema (typed via annotations); the return value is the output. Useful
+options:
+
+```python
+@a2a.tool(
+    description="...",           # what the model reads to route calls — write it well
+    tags=("search",),
+    scopes=("workspace:read",),  # least-privilege grants this skill needs
+    stream=False,                # True to yield partial progress
+    timeout_seconds=120,
+    idempotent=True,
+    max_retries=2,
+    cost_class="cheap",
+)
+async def my_skill(self, ctx: RunContext[NoAuth], text: str) -> str:
+    ...
+```
+
+## RunContext — the platform API (`ctx`)
+
+- `ctx.llm` → `LLMCreds(model, api_key, source)`. The only sanctioned LLM
+  credential. Check `ctx.llm.api_key` before use.
+- `ctx.workspace` — grant-scoped file reads/writes (MinIO-backed).
+- `ctx.workspace_backend()` — file backend for frameworks (DeepAgents). Use this
+  so framework file tools land in the durable workspace, not just graph state.
+- `ctx.write_artifact(...)` — explicit output artifacts.
+- `ctx.workspace_shell(cmd, image="python:3.11-slim", timeout_seconds=120)` —
+  run a command in a workspace-mounted sandbox; the way to run real code, render
+  media, or drive a CLI that writes files durably.
+- `ctx.emit_progress("...")` — stream progress to the caller.
+- `ctx.discover.find_agents(tags=(), capability=None, skill=None)` — find other
+  agents to hand off to.
+- `ctx.auth` — the resolved principal (typed by `auth_model`).
+
+## Durable files
+
+Workspaces are grant-scoped and MinIO-backed. Write intentional outputs to
+`/workspace/outputs/...` or `ctx.write_artifact(...)` for stable, downloadable
+paths. If sandboxed code writes to process-local paths (`/tmp`, `/root`,
+`/app`), the platform captures them under `outputs/rootfs-captures/...`. Do not
+rely on a plain subprocess in the agent container for durable output.
+
+## DeepAgents (the starter stack)
+
+The scaffold builds a DeepAgents graph. Always pass the A2A backend so files are
+durable:
+
+```python
+from a2a_pack.deepagents import create_a2a_deep_agent
+
+backend = ctx.workspace_backend()
+graph = create_a2a_deep_agent(ctx, creds=ctx.llm, backend=backend, tools=[...], system_prompt="...")
+state = await graph.ainvoke(
+    {"messages": [{"role": "user", "content": prompt}]},
+    config={"recursion_limit": 500},
+)
+```
+
+### Runtime skills (SKILL.md, for the deployed agent — not for you)
+
+Reusable workflow knowledge for the *running agent* goes in source-controlled
+`skills/<skill-name>/SKILL.md` folders at the project root. The starter's
+`_seed_runtime_skills` copies them into the invocation workspace and passes the
+path to `create_a2a_deep_agent(..., skills=[...])` for progressive disclosure.
+These are distinct from `.claude/skills/` (which is for coding agents like you).
+
+## Auth
+
+Public by default (`auth_model = NoAuth`). To require the caller's app login,
+declare a typed auth model and resolver:
+
+```python
+from a2a_pack import JWTAuth, OIDCUserInfoAuthResolver
+
+auth_model = JWTAuth
+auth_resolver = OIDCUserInfoAuthResolver("https://auth.example.com/oauth2/userinfo", auth_model=JWTAuth)
+```
+
+## CLI workflow
+
+```bash
+a2a dev --local                                           # local server + hot reload; serves invoke/card/MCP
+a2a dev                                                   # public cloud dev box + hot reload
+a2a test                                                  # preflight checks
+a2a test --invoke --skill greet --args-json '{"who":"x"}' # invoke one skill locally
+a2a card                                                  # print the Agent Card schema
+a2a validate                                              # load the agent, fail on errors
+a2a deploy                                                # tarball + build + roll out via the control plane
+```
+
+Run `a2a validate` and `a2a card` after changes to confirm the agent still loads
+and the card is well-formed before you deploy.

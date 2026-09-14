@@ -1,0 +1,22 @@
+{{ frontend_stage }}
+FROM {{ base_image }}
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+RUN if [ -d /app/_a2a_sdk ]; then pip install --no-cache-dir /app/_a2a_sdk; fi
+{{ frontend_runtime }}
+
+ENV A2A_ENTRYPOINT={{ entrypoint }}
+ENV PORT=8000
+EXPOSE 8000
+
+# Exec form (JSON array) so the python/uvicorn process is PID 1 and receives
+# SIGTERM directly. Shell form would make /bin/sh PID 1, which doesn't forward
+# the signal, so uvicorn never shuts down gracefully and the pod sits until the
+# full terminationGracePeriod (SIGKILL). With exec form: idle pods exit in ~1s,
+# and in-flight requests drain (uvicorn graceful shutdown) instead of being cut.
+CMD ["a2a", "run", "--entrypoint", "{{ entrypoint }}", "--host", "0.0.0.0", "--port", "8000"]

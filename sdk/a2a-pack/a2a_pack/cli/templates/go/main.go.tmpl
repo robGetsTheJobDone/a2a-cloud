@@ -1,0 +1,43 @@
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+
+	a2apack "a2acloud.io/a2a-pack-go"
+)
+
+type {{ class_name }} struct{}
+
+func ({{ class_name }}) Definition() a2apack.AgentDefinition {
+	return a2apack.AgentDefinition{
+		Name:        "{{ name }}",
+		Description: "{{ description }}",
+		Version:     "0.1.0",
+	}
+}
+
+func ({{ class_name }}) Sum(_ context.Context, request a2apack.SumRequest) (a2apack.SumResponse, error) {
+	return a2apack.SumResponse{Value: request.Left + request.Right}, nil
+}
+
+func main() {
+	agent := {{ class_name }}{}
+	mode := "worker"
+	if len(os.Args) > 1 {
+		mode = os.Args[1]
+	}
+	switch mode {
+	case "compile":
+		if err := a2apack.CompileAgent(agent); err != nil {
+			log.Fatal(err)
+		}
+	case "worker":
+		if err := a2apack.ServeAgent(agent); err != nil {
+			log.Fatal(err)
+		}
+	default:
+		log.Fatalf("unknown mode %q; use compile or worker", mode)
+	}
+}

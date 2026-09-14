@@ -1,0 +1,19 @@
+# a2a devbox sshd drop-in (/etc/ssh/sshd_config.d/devbox.conf).
+# sshd listens on localhost only — the WS<->sshd bridge is the sole network
+# path in, and the pod's serving port is the bridge, not sshd.
+ListenAddress 127.0.0.1
+# Single stable host key (injected per box by the control plane; generated at
+# boot when running standalone). Other key types would regenerate every pod
+# and trip clients' host-key checks.
+HostKey /etc/ssh/ssh_host_ed25519_key
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AllowUsers dev
+PermitTTY yes
+# TCP forwarding stays on so VS Code Remote-SSH port forwarding works.
+AllowTcpForwarding yes
+X11Forwarding no
+PrintMotd no
+AcceptEnv LANG LC_*

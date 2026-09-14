@@ -1,0 +1,17 @@
+.git
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+.turbo
+**/.turbo
+coverage
+**/coverage
+*.tsbuildinfo
+package-lock.json
+**/package-lock.json
+.DS_Store
+.env
+.env.*

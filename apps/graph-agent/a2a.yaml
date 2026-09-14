@@ -1,0 +1,5 @@
+name: graph-agent
+version: 0.1.0
+entrypoint: agent:GraphAgent
+expose:
+  public: true

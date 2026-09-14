@@ -1,0 +1,2 @@
+# ci: retrigger cp-build for a2a-pack pin bump (Actions missed 50a538d4)
+# registry pruned+GCed, 41G free — rebuild

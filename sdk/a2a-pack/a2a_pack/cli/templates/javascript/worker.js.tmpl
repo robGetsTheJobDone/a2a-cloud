@@ -1,0 +1,11 @@
+import { serveAgent } from "a2a-pack-ts";
+
+import { {{ class_name }} } from "./agent.js";
+
+serveAgent(
+  {{ class_name }},
+  {
+    host: process.env.A2A_WORKER_HOST ?? "127.0.0.1",
+    port: Number(process.env.A2A_WORKER_PORT ?? "9001")
+  }
+);

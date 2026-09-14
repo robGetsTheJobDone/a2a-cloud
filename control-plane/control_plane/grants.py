@@ -1,0 +1,198 @@
+"""Minimal subset of ``a2a_pack.grants`` vendored for the control plane.
+
+The full SDK lives in ``apps/a2a/a2a_pack/grants.py``. We only need the
+mint and lightweight verify paths here. Production grants are signed with
+``A2A_GRANT_SIGNING_KEY`` and verified with ``A2A_GRANT_VERIFYING_KEY``.
+"""
+from __future__ import annotations
+
+import base64
+import binascii
+import json
+import os
+import secrets
+import time
+from typing import Any
+
+
+def _grant_signing_key_env() -> str:
+    return os.environ.get("A2A_GRANT_SIGNING_KEY", "").strip()
+
+
+def _grant_verifying_key_env() -> str:
+    return os.environ.get("A2A_GRANT_VERIFYING_KEY", "").strip()
+
+
+def _decode_key_material(value: str) -> bytes:
+    clean = value.strip()
+    if clean.startswith("base64:"):
+        clean = clean[len("base64:") :].strip()
+    try:
+        return base64.b64decode(clean, validate=True)
+    except binascii.Error:
+        pad = "=" * (-len(clean) % 4)
+        return base64.urlsafe_b64decode(clean + pad)
+
+
+def _ed25519_private_key(value: str) -> Any:
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    if "BEGIN" in value:
+        return serialization.load_pem_private_key(value.encode("utf-8"), password=None)
+    return Ed25519PrivateKey.from_private_bytes(_decode_key_material(value))
+
+
+def _ed25519_public_key(value: str) -> Any:
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+    if "BEGIN" in value:
+        return serialization.load_pem_public_key(value.encode("utf-8"))
+    return Ed25519PublicKey.from_public_bytes(_decode_key_material(value))
+
+
+def _ed25519_verifying_key() -> Any | None:
+    verifying_key = _grant_verifying_key_env()
+    if verifying_key:
+        return _ed25519_public_key(verifying_key)
+    signing_key = _grant_signing_key_env()
+    if signing_key:
+        return _ed25519_private_key(signing_key).public_key()
+    return None
+
+
+def _required_signing_key() -> Any:
+    signing_key = _grant_signing_key_env()
+    if not signing_key:
+        raise RuntimeError("A2A_GRANT_SIGNING_KEY is required")
+    return _ed25519_private_key(signing_key)
+
+
+def _required_verifying_key() -> Any:
+    verifying_key = _ed25519_verifying_key()
+    if verifying_key is None:
+        raise GrantInvalid("A2A_GRANT_VERIFYING_KEY is required")
+    return verifying_key
+
+
+def _b64(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode("ascii")
+
+
+def normalize_write_prefixes(
+    outputs_prefix: str | None = None,
+    write_prefixes: tuple[str, ...] = (),
+) -> tuple[str, ...]:
+    prefixes: list[str] = []
+    values: list[str] = []
+    if outputs_prefix:
+        values.append(outputs_prefix)
+    values.extend(write_prefixes)
+    for value in values:
+        clean = str(value).replace("\\", "/").strip("/")
+        if not clean:
+            continue
+        normalized = clean + "/"
+        if normalized not in prefixes:
+            prefixes.append(normalized)
+    return tuple(prefixes)
+
+
+def normalize_source_grants(
+    source_grants: tuple[dict[str, Any], ...] = (),
+) -> tuple[dict[str, str], ...]:
+    grants: list[dict[str, str]] = []
+    for item in source_grants:
+        if not isinstance(item, dict):
+            continue
+        agent = str(item.get("agent") or item.get("repo") or item.get("name") or "").strip()
+        scope = str(item.get("scope") or "read").strip().lower()
+        if not agent or scope not in {"read", "write"}:
+            continue
+        grant = {"agent": agent, "scope": scope}
+        if grant not in grants:
+            grants.append(grant)
+    return tuple(grants)
+
+
+def mint_grant_token(
+    *,
+    issuer: str,
+    audience: str,
+    bucket: str,
+    mode: str = "read_write_overlay",
+    allow_patterns: tuple[str, ...] = ("**",),
+    deny_patterns: tuple[str, ...] = (),
+    outputs_prefix: str | None = None,
+    write_prefixes: tuple[str, ...] = (),
+    llm_models: tuple[str, ...] = (),
+    llm_max_budget_usd: float | None = None,
+    llm_rpm_limit: int | None = None,
+    llm_tpm_limit: int | None = None,
+    source_grants: tuple[dict[str, Any], ...] = (),
+    ttl_seconds: int = 300,
+) -> tuple[str, dict[str, Any]]:
+    """Build the same grant payload format the SDK verifies. Returns
+    ``(token, payload_dict)`` so callers can log the grant_id."""
+    now = int(time.time())
+    payload: dict[str, Any] = {
+        "grant_id": secrets.token_hex(8),
+        "issuer": issuer,
+        "audience": audience,
+        "bucket": bucket,
+        "mode": mode,
+        "allow_patterns": list(allow_patterns),
+        "deny_patterns": list(deny_patterns),
+        "outputs_prefix": outputs_prefix,
+        "write_prefixes": list(normalize_write_prefixes(outputs_prefix, write_prefixes)),
+        "llm_models": list(llm_models),
+        "llm_max_budget_usd": llm_max_budget_usd,
+        "llm_rpm_limit": llm_rpm_limit,
+        "llm_tpm_limit": llm_tpm_limit,
+        "expires_at": now + ttl_seconds,
+        "issued_at": now,
+        "nonce": secrets.token_hex(8),
+    }
+    payload["source_grants"] = [
+        dict(item) for item in normalize_source_grants(source_grants)
+    ]
+    body = json.dumps(payload).encode("utf-8")
+    sig = _required_signing_key().sign(body)
+    return f"{_b64(body)}.{_b64(sig)}", payload
+
+
+class GrantInvalid(PermissionError):
+    """Raised when a workspace grant is malformed, expired, or forged."""
+
+
+def _b64d(s: str) -> bytes:
+    pad = "=" * (-len(s) % 4)
+    return base64.urlsafe_b64decode(s + pad)
+
+
+def verify_grant_token(token: str) -> dict[str, Any]:
+    if not token or "." not in token:
+        raise GrantInvalid("malformed grant token")
+    payload_b64, sig_b64 = token.rsplit(".", 1)
+    try:
+        payload = _b64d(payload_b64)
+        sig = _b64d(sig_b64)
+    except (ValueError, base64.binascii.Error) as exc:  # type: ignore[attr-defined]
+        raise GrantInvalid(f"grant decode failed: {exc}") from exc
+
+    verifying_key = _required_verifying_key()
+    try:
+        verifying_key.verify(sig, payload)
+    except Exception as exc:  # noqa: BLE001
+        raise GrantInvalid("grant signature mismatch") from exc
+
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise GrantInvalid(f"grant payload invalid: {exc}") from exc
+    if data.get("expires_at") and data["expires_at"] < int(time.time()):
+        raise GrantInvalid(f"grant expired at {data['expires_at']}")
+    if not data.get("write_prefixes") and data.get("outputs_prefix"):
+        data["write_prefixes"] = list(normalize_write_prefixes(data.get("outputs_prefix")))
+    return data

@@ -1,0 +1,31 @@
+# {{ name }}
+
+## Read this first
+
+{{ single_skill_notice }}
+
+## About
+
+{{ description }}
+
+This Go project was scaffolded with `a2a init --language go`. It declares the
+agent contract in native Go code, compiles that declaration to
+`.a2a/agent.dsl.json`, and serves the small localhost worker endpoint that the
+common A2A sidecar invokes.
+
+## Local Setup
+
+```bash
+go run . compile
+go run . worker
+```
+
+`go run . compile` writes `.a2a/agent.dsl.json`. The deployed container builds
+the worker binary at `./worker` beside `a2a sidecar`; the public A2A/MCP
+endpoints are served by the sidecar.
+
+## Deploy
+
+```bash
+a2a deploy
+```

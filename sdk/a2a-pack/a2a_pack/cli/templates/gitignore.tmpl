@@ -1,0 +1,30 @@
+# Secrets. `a2a dev --local` reads .env.local; never commit it.
+.env
+.env.local
+.env.*.local
+
+# Local agent state: workspace files, compiled DSL, chat compose harness.
+.a2a/
+
+# Build output
+dist/
+build/
+target/
+.next/
+out/
+
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Python bytecode and tool caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS noise
+.DS_Store
+{{ frontend_ignore_block }}

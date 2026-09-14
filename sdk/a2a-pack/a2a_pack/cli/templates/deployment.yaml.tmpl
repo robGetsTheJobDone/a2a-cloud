@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ name }}
+  namespace: agents
+  labels:
+    app: {{ name }}
+    a2a/managed-by: control-plane
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: {{ name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  progressDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app: {{ name }}
+    spec:
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: agent
+          # tag is rewritten by the build workflow on every push
+          image: registry.a2acloud.io/agents/{{ name }}:latest
+          imagePullPolicy: Always
+          env:
+            - name: A2A_AGENT_IMAGE
+              value: registry.a2acloud.io/agents/{{ name }}:latest
+            - name: A2A_RENDER_IMAGE
+              value: registry.a2acloud.io/agents/{{ name }}:latest
+          ports:
+            - containerPort: 8000
+              name: http1
+              protocol: TCP
+          readinessProbe:
+            httpGet: {path: /healthz, port: 8000}
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8000}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {cpu: 200m, memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ name }}
+  namespace: agents
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=false,Replace=true
+  labels:
+    app: {{ name }}
+    a2a/managed-by: control-plane
+spec:
+  selector:
+    app: {{ name }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ name }}
+  namespace: agents
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  tls:
+    - hosts: [{{ name }}.a2acloud.io]
+      secretName: {{ name }}-a2acloud-io-tls
+  rules:
+    - host: {{ name }}.a2acloud.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ name }}
+                port:
+                  number: 80

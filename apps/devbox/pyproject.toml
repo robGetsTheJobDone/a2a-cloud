@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "a2a-devbox"
+version = "0.1.0"
+description = "WebSocket <-> sshd bridge for the a2a throwaway SSH dev box"
+requires-python = ">=3.11"
+dependencies = ["aiohttp>=3.9"]
+
+[project.scripts]
+devbox-bridge = "devbox.bridge:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["devbox"]

@@ -1,0 +1,11 @@
+[package]
+name = "{{ name }}"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+a2a-pack-rs = { path = "third_party/a2a-pack-rs" }
+
+[[bin]]
+name = "worker"
+path = "src/main.rs"

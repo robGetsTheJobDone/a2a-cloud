@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.venv
+.pytest_cache
+*.egg-info
+dist
+!a2a_pack/typescript/dist/
+!a2a_pack/typescript/dist/**
+build
+node_modules
+.codegraph/
+
+.env

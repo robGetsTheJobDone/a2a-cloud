@@ -1,0 +1,31 @@
+# {{ name }}
+
+## Read this first
+
+{{ single_skill_notice }}
+
+## About
+
+{{ description }}
+
+This Rust project was scaffolded with `a2a init --language rust`. It declares
+the agent contract in native Rust code, compiles that declaration to
+`.a2a/agent.dsl.json`, and serves the small localhost worker endpoint that the
+common A2A sidecar invokes.
+
+## Local Setup
+
+```bash
+cargo run -- compile
+cargo run -- worker
+```
+
+`cargo run -- compile` writes `.a2a/agent.dsl.json`. The deployed container
+builds the release binary and copies it to `./worker` beside `a2a sidecar`; the
+public A2A/MCP endpoints are served by the sidecar.
+
+## Deploy
+
+```bash
+a2a deploy
+```

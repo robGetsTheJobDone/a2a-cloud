@@ -1,0 +1,15 @@
+name: code-editor-agent
+version: 0.2.8
+entrypoint: agent:CodeEditorAgent
+description: Shared OpenHarness + CodeGraph coding agent for opted-in managed source repos.
+runtime:
+  features:
+    - codegraph
+  apt_packages:
+    - git
+  resources:
+    cpu: "1500m"
+    memory: 2Gi
+    max_runtime_seconds: 3600
+expose:
+  public: false

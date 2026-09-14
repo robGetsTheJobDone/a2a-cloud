@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Runtime Telemetry foundation — REDESIGN_ETHOS §2.
+ * Token source of truth: packages/design-system/{tailwind.cjs,src/styles.css}.
+ * These :root vars mirror the design-system tokens so base/body styling can use them
+ * without a cross-package CSS @import; component classes use the tailwind tokens
+ * (bg-runtime-*, text-ink-*, signal-*) directly.
+ */
+:root {
+  color-scheme: dark;
+  --ds-bg: #071b16;
+  --ds-bg-soft: #092018;
+  --ds-panel: #0a211a;
+  --ds-raised: #102c23;
+  --ds-line: #1d4b3f;
+  --ds-line-soft: #14382f;
+  --ds-text: #f7fff8;
+  --ds-text-dim: #adc7bd;
+  --ds-text-muted: #789286;
+  --ds-text-faint: #557165;
+  --ds-protocol: #7ee7d0;
+  --ds-protocol-strong: #2dd6b3;
+  --ds-live: #8bdc9e;
+  --ds-authority: #f3d36b;
+  --ds-peer: #c2a6ff;
+  --ds-proof: #ff8db3;
+  --ds-danger: #ff5c7a;
+  --ds-volt: #b8ffe0;
+
+  --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    color-scheme: dark;
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    font-family: var(--font-sans);
+    /* Deep-teal substrate with the runtime-grid atmosphere instead of a flat fill. */
+    background-color: var(--ds-bg);
+    background-image:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(126, 231, 208, 0.08), transparent 70%),
+      radial-gradient(ellipse 60% 45% at 85% 8%, rgba(194, 166, 255, 0.05), transparent 70%),
+      radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: auto, auto, 28px 28px;
+    background-attachment: fixed;
+    color: var(--ds-text);
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: 0;
+  }
+
+  /* Tabular, monospaced machine values everywhere they're tagged. */
+  code,
+  kbd,
+  samp,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum", "zero";
+  }
+
+  ::selection {
+    background: rgb(126 231 208 / 0.28);
+    color: #04120d;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ds-protocol);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgb(126 231 208 / 0.18);
+  }
+
+  /* Quiet, hairline scrollbars in teal — present only when needed */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(45 214 179 / 0.32) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgb(45 214 179 / 0.28);
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(126 231 208 / 0.5);
+    background-clip: padding-box;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .min-h-app-shell {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+  }
+
+  .h-app-shell {
+    height: 100vh;
+    height: 100svh;
+    height: 100dvh;
+  }
+
+  .safe-area-x {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
+
+  .break-anywhere {
+    overflow-wrap: anywhere;
+  }
+
+  /* Runtime substrate panels — atmosphere instead of flat fills (ethos §2 texture). */
+  .runtime-grid-bg {
+    background-image:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(126, 231, 208, 0.1), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 30%, rgba(194, 166, 255, 0.06), transparent 70%),
+      radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: auto, auto, 28px 28px;
+  }
+
+  .dot-grid-bg {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* Keep-alive route panes (ethos mandate E): inactive panes stay MOUNTED but
+     `hidden` (display:none, no layout cost, dropped from a11y tree). The active pane
+     plays a GPU-composited enter animation each time it is un-hidden — display:none
+     -> block restarts the animation, so every navigation animates without
+     re-rendering the underlying view. */
+  /* Defensive: a `hidden` pane must collapse no matter what display utility
+     (flex/grid/block) is also on the element — otherwise visited panes stack. */
+  .route-pane[hidden] {
+    display: none !important;
+  }
+  .route-pane:not([hidden]) {
+    animation: routePaneIn 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: transform, opacity;
+  }
+  @keyframes routePaneIn {
+    from {
+      opacity: 0;
+      transform: translateX(26px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .route-pane:not([hidden]) {
+      animation: none;
+    }
+  }
+
+  /* Right-anchored detail sheet entrance (mandate C overlay). */
+  .sheet-in-right {
+    animation: sheetInRight 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  @keyframes sheetInRight {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sheet-in-right {
+      animation: none;
+    }
+  }
+}

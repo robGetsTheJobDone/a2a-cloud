@@ -1,0 +1,19 @@
+{
+  "name": "{{ name }}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "compile": "npm run build && node dist/agent.js",
+    "worker": "npm run build && node dist/worker.js"
+  },
+  "dependencies": {
+    "a2a-pack-ts": "file:vendor/a2a-pack-ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "typescript": "^5.5.3"
+  }
+}
+

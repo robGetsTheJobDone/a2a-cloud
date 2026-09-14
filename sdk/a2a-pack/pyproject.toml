@@ -1,0 +1,110 @@
+[build-system]
+# PyPI currently rejects wheels emitted with Core Metadata 2.5. Pin hatchling
+# until Warehouse accepts that metadata version.
+requires = ["hatchling<1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "a2a-pack"
+description = "Developer SDK + CLI for building, packaging, and deploying A2A agents."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "a2a cloud", email = "hello@a2acloud.io" }]
+keywords = [
+  "agent",
+  "agents",
+  "a2a",
+  "ai",
+  "llm",
+  "mcp",
+  "model-context-protocol",
+  "sandbox",
+  "microvm",
+  "marketplace",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+# version is sourced from a2a_pack.__version__ so the package is the
+# single source of truth — bump it there and the wheel picks it up.
+dynamic = ["version"]
+dependencies = [
+  "pydantic>=2.6",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "typer>=0.12",
+  "rich>=13",
+  "PyYAML>=6",
+  "httpx>=0.27",
+  "boto3>=1.34",
+  "python-multipart>=0.0.9",
+  "cryptography>=42",
+  "PyJWT>=2.8",
+  # `a2a ssh` tunnels SSH over a WebSocket (ProxyCommand). Pure-python, tiny.
+  "websockets>=12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.23",
+  "httpx>=0.27",
+  "build>=1.2",
+  "twine>=5",
+  "playwright>=1.45",
+]
+
+[project.urls]
+Homepage = "https://a2acloud.io"
+Documentation = "https://docs.a2acloud.io"
+Repository = "https://gitea.a2acloud.io/gitea_admin/a2a-pack"
+Issues = "https://gitea.a2acloud.io/gitea_admin/a2a-pack/issues"
+
+[project.scripts]
+a2a = "a2a_pack.cli.main:app"
+
+[tool.hatch.version]
+path = "a2a_pack/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["a2a_pack"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"a2a_pack/cli/templates" = "a2a_pack/cli/templates"
+"a2a_pack/cli/dev_ui_static" = "a2a_pack/cli/dev_ui_static"
+"a2a_pack/go" = "a2a_pack/go"
+"a2a_pack/rust" = "a2a_pack/rust"
+
+[tool.hatch.build.targets.sdist]
+# Anchor the root files with a leading "/", otherwise hatchling's bare glob
+# matches README.md recursively and leaks docker/typescript/examples READMEs
+# into the published sdist (the sdk-publish guard rejects anything outside
+# a2a_pack/). Keep the published artifact to just the package + its metadata.
+only-include = [
+  "a2a_pack",
+  "/README.md",
+  "/LICENSE",
+  "/pyproject.toml",
+]
+# (hatchling always ships the repo .gitignore in the sdist and it can't be
+# excluded via config; the sdk-publish guard allowlists it.)
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+  "e2e: browser-level local dev console tests",
+]

@@ -1,0 +1,158 @@
+#!/bin/sh
+set -eu
+
+language="${1:-}"
+dsl_path="${A2A_DSL_PATH:-.a2a/agent.dsl.json}"
+
+die() {
+  echo "a2a-sidecar-build: $*" >&2
+  exit 1
+}
+
+[ -n "$language" ] || die "language argument is required"
+[ -f "$dsl_path" ] || die "missing Agent DSL at $dsl_path"
+
+actual_language="$(
+  python3 - "$dsl_path" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    data = json.load(handle)
+language = data.get("language")
+if not isinstance(language, str) or not language:
+    raise SystemExit("agent_dsl.language is required")
+print(language)
+PY
+)"
+
+[ "$actual_language" = "$language" ] || die "DSL language is $actual_language, not $language"
+
+worker_command="$(
+  python3 - "$dsl_path" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    data = json.load(handle)
+entrypoint = data.get("entrypoint") or {}
+command = entrypoint.get("command") if isinstance(entrypoint, dict) else None
+if isinstance(command, list) and command and isinstance(command[0], str):
+    print(command[0])
+PY
+)"
+
+run_make_build_if_present() {
+  if [ -f Makefile ] && command -v make >/dev/null 2>&1 && grep -Eq '^build:' Makefile; then
+    make build
+    return 0
+  fi
+  return 1
+}
+
+install_node_deps() {
+  if [ -f package-lock.json ]; then
+    npm ci
+  elif [ -f yarn.lock ]; then
+    corepack enable
+    yarn install --frozen-lockfile
+  elif [ -f pnpm-lock.yaml ]; then
+    corepack enable
+    pnpm install --frozen-lockfile
+  elif [ -f package.json ]; then
+    npm install
+  fi
+}
+
+build_node() {
+  install_node_deps
+  if [ -f package.json ]; then
+    npm run build --if-present
+  elif [ "$language" = "typescript" ] && [ -x node_modules/.bin/tsc ]; then
+    node_modules/.bin/tsc -p tsconfig.json
+  fi
+}
+
+build_go() {
+  run_make_build_if_present && return 0
+  go_sources="$(find . -maxdepth 1 -name '*.go' -type f | head -n 1)"
+  if [ ! -f go.mod ] && [ -z "$go_sources" ]; then
+    return 0
+  fi
+  [ -f go.mod ] && go mod download
+  case "$worker_command" in
+    ./*)
+      mkdir -p "$(dirname "$worker_command")"
+      go build -o "$worker_command" .
+      ;;
+    "")
+      [ -f go.mod ] && go build ./...
+      ;;
+    *)
+      [ -f go.mod ] && go build ./...
+      ;;
+  esac
+}
+
+build_rust() {
+  run_make_build_if_present && return 0
+  [ -f Cargo.toml ] || return 0
+  cargo build --release
+  case "$worker_command" in
+    ./*)
+      if [ ! -x "$worker_command" ] && [ -f "target/release/$(basename "$worker_command")" ]; then
+        cp "target/release/$(basename "$worker_command")" "$worker_command"
+        chmod +x "$worker_command"
+      fi
+      ;;
+  esac
+}
+
+build_java() {
+  run_make_build_if_present && return 0
+  if [ -x ./mvnw ]; then
+    ./mvnw -B package -DskipTests
+  elif [ -x ./gradlew ]; then
+    ./gradlew build
+  elif [ -f pom.xml ]; then
+    mvn -B package -DskipTests
+  elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+    gradle build
+  fi
+}
+
+build_dotnet() {
+  run_make_build_if_present && return 0
+  set -- *.sln
+  if [ -f "$1" ]; then
+    dotnet restore "$1"
+    dotnet build "$1" -c Release --no-restore
+    return 0
+  fi
+  set -- *.csproj
+  if [ -f "$1" ]; then
+    dotnet restore "$1"
+    dotnet build "$1" -c Release --no-restore
+  fi
+}
+
+case "$language" in
+  typescript|javascript)
+    build_node
+    ;;
+  go)
+    build_go
+    ;;
+  rust)
+    build_rust
+    ;;
+  java)
+    build_java
+    ;;
+  dotnet)
+    build_dotnet
+    ;;
+  *)
+    die "unsupported language: $language"
+    ;;
+esac

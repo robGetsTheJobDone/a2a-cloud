@@ -1,0 +1,34 @@
+# dependencies / envs
+node_modules/
+.venv/
+venv/
+*.egg-info/
+
+# build output
+.next/
+.turbo/
+dist/
+build/
+target/
+coverage/
+playwright-report/
+test-results/
+*.tgz
+*.log
+
+# caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.codegraph/
+
+# local tooling
+.claude/
+.DS_Store
+.env
+*.local.json
+
+# a2a CLI compile output
+.a2a/

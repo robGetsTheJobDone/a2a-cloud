@@ -1,0 +1,24 @@
+name: procurement-agent
+version: 0.1.0
+entrypoint: agent:ProcurementAgent
+expose:
+  public: false
+resources:
+  databases:
+    - name: procurement
+      provider: neon
+      engine: postgres
+      scope: org
+      branch: main
+      access_mode: read_write
+      env:
+        url: DATABASE_URL
+      migrations:
+        path: db/migrations
+      scale_to_zero: true
+frontend:
+  path: frontend
+  dist: dist
+  mount: /app
+  auth: inherit
+  type: static-spa

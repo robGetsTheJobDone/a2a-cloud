@@ -1,0 +1,14 @@
+# {{ name }}
+
+@AGENTS.md
+
+The reference above (`AGENTS.md`) is the source of truth for building on A2A
+Cloud — SDK API, the golden rules, and the CLI workflow. Read it before editing.
+
+Claude Code specifics:
+
+- A build skill lives at `.claude/skills/build-a2a-agent/` — invoke it when
+  adding or reworking a skill and you want the full playbook.
+- After changing `agent.py`, verify with `a2a validate` and `a2a card`; invoke a
+  single skill with `a2a test --invoke --skill <name> --args-json '{...}'`.
+- Do not read provider LLM keys — use `ctx.llm` only (see AGENTS.md golden rules).

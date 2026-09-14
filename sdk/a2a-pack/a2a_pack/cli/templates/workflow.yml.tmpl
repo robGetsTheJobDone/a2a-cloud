@@ -1,0 +1,66 @@
+name: build
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'deploy/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: build image
+        env:
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          set -e
+          test "$REGISTRY_USERNAME" = registry-push
+          test -n "$REGISTRY_PASSWORD"
+          trap 'docker logout registry.a2acloud.io >/dev/null 2>&1 || true' EXIT
+          printf '%s' "$REGISTRY_PASSWORD" | docker login registry.a2acloud.io \
+            --username "$REGISTRY_USERNAME" --password-stdin
+          IMG=registry.a2acloud.io/agents/{{ name }}
+          docker build --pull -t "$IMG:$GITHUB_SHA" -t "$IMG:latest" .
+          push_output="$(docker push "$IMG:$GITHUB_SHA" 2>&1 | tee /dev/stderr)"
+          docker push "$IMG:latest"
+          digest="$(printf '%s\n' "$push_output" \
+            | sed -n 's/.*digest: \(sha256:[0-9a-f]*\).*/\1/p' \
+            | tail -1)"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          PINNED_IMAGE="$IMG:$GITHUB_SHA@$digest"
+          docker manifest inspect --verbose "$PINNED_IMAGE" >/dev/null
+          printf '%s\n' "$PINNED_IMAGE" >.a2a-pushed-image
+
+      - name: bump deploy manifest
+        run: |
+          IMG=registry.a2acloud.io/agents/{{ name }}
+          PINNED_IMAGE="$(cat .a2a-pushed-image)"
+          rm -f .a2a-pushed-image
+          [[ "$PINNED_IMAGE" =~ ^$IMG:[^@[:space:]]+@sha256:[0-9a-f]{64}$ ]]
+          sed -i "s|image: $IMG:.*|image: $PINNED_IMAGE|" deploy/20-deployment.yaml
+          sed -i "s|value: $IMG:.*|value: $PINNED_IMAGE|" deploy/20-deployment.yaml
+          git config user.email "ci@a2a.local"
+          git config user.name "ci"
+          git add deploy/20-deployment.yaml
+          if git diff --staged --quiet; then
+            echo "no manifest changes"
+          else
+            git commit -m "ci: bump image to $GITHUB_SHA"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase -X theirs FETCH_HEAD
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              git rebase --abort || true
+              sleep "$((attempt * 2))"
+            done
+            exit 1
+          fi

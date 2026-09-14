@@ -1,0 +1,67 @@
+import { pathToFileURL } from "node:url";
+
+import { A2AAgent, publicAuth, skill, writeAgentDsl, type RunContext } from "a2a-pack-ts";
+
+type SumInput = {
+  left: number;
+  right: number;
+};
+
+export class {{ class_name }} extends A2AAgent {
+  static agent = {
+    name: "{{ name }}",
+    description: "{{ description }}",
+    version: "0.1.0"
+  };
+
+  static auth = publicAuth();
+
+  static skills = [
+    skill({
+      name: "sum",
+      handler: "sum",
+      description: "Add two numbers",
+      input_schema: {
+        type: "object",
+        properties: {
+          left: { type: "number" },
+          right: { type: "number" }
+        },
+        required: ["left", "right"],
+        additionalProperties: false
+      },
+      output_schema: {
+        type: "object",
+        properties: {
+          value: { type: "number" }
+        },
+        required: ["value"],
+        additionalProperties: false
+      },
+      policy: {
+        timeout_seconds: 30,
+        idempotent: true
+      }
+    })
+  ];
+
+  async sum(ctx: RunContext, input: SumInput): Promise<{ value: number }> {
+    const { left, right } = input;
+    if (typeof left !== "number" || typeof right !== "number") {
+      throw new Error("left and right must be numbers");
+    }
+    await ctx.emitProgress("sum complete", { left, right });
+    return { value: left + right };
+  }
+}
+
+async function main(): Promise<void> {
+  await writeAgentDsl({{ class_name }}, ".a2a/agent.dsl.json", {
+    entrypoint: { command: ["node", "dist/worker.js"] }
+  });
+  console.log("compiled .a2a/agent.dsl.json");
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}

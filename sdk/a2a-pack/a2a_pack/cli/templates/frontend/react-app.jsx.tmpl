@@ -1,0 +1,158 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  callSkill,
+  loadAgentConfig,
+  loadSession,
+  sampleArgs,
+  signInUrl,
+} from "./a2a.js";
+
+export function App() {
+  const [config, setConfig] = useState(null);
+  const [session, setSession] = useState(null);
+  const [selectedSkillName, setSelectedSkillName] = useState("");
+  const [argsText, setArgsText] = useState("{}");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    loadAgentConfig()
+      .then((data) => {
+        setConfig(data);
+        const firstSkill = data.skills?.[0];
+        if (firstSkill) {
+          setSelectedSkillName(firstSkill.name);
+          setArgsText(JSON.stringify(sampleArgs(firstSkill), null, 2));
+        }
+        return loadSession(data).catch(() => null);
+      })
+      .then((sessionData) => setSession(sessionData))
+      .catch((err) => setError(err.message || String(err)));
+  }, []);
+
+  const selectedSkill = useMemo(
+    () => config?.skills?.find((skill) => skill.name === selectedSkillName),
+    [config, selectedSkillName],
+  );
+
+  const needsSignIn = Boolean(
+    config?.auth?.invokeRequiresSession && session && !session.authenticated,
+  );
+  const signInHref = useMemo(
+    () => (config && needsSignIn ? signInUrl(config) : null),
+    [config, needsSignIn],
+  );
+
+  function selectSkill(skill) {
+    setSelectedSkillName(skill.name);
+    setArgsText(JSON.stringify(sampleArgs(skill), null, 2));
+    setResult(null);
+    setError(null);
+  }
+
+  async function runSkill(event) {
+    event.preventDefault();
+    if (!config || !selectedSkill) return;
+    setRunning(true);
+    setError(null);
+    setResult(null);
+    try {
+      const args = JSON.parse(argsText || "{}");
+      const data = await callSkill(config, selectedSkill.name, args);
+      setResult(data);
+    } catch (err) {
+      setError(err.message || String(err));
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  if (!config) {
+    return (
+      <main className="loading">
+        <p>{error || "Loading A2A agent contract..."}</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="app-shell">
+      <aside className="sidebar">
+        <div>
+          <p className="eyebrow">A2A packed app</p>
+          <h1>{{ name }}</h1>
+          <p className="agent-meta">
+            {config.agent.name} v{config.agent.version}
+          </p>
+        </div>
+
+        <nav className="skill-list" aria-label="Agent skills">
+          {(config.skills || []).map((skill) => (
+            <button
+              className={skill.name === selectedSkillName ? "skill active" : "skill"}
+              key={skill.name}
+              onClick={() => selectSkill(skill)}
+              type="button"
+            >
+              <span>{skill.name}</span>
+              <small>{skill.stream ? "streaming" : "request"}</small>
+            </button>
+          ))}
+        </nav>
+
+        <div className="session">
+          <span>{session?.authenticated ? "Signed in" : needsSignIn ? "Signed out" : "Local session"}</span>
+          <strong>{session?.user?.email || session?.org?.slug || "dev@example.local"}</strong>
+          {/* Skills that spend the caller's LLM budget need a signed-in
+              visitor even when the page itself is public, so offer the way in
+              rather than failing at the first click. */}
+          {needsSignIn && signInHref ? (
+            <a className="signin" href={signInHref}>Sign in to run</a>
+          ) : null}
+        </div>
+      </aside>
+
+      <section className="workbench">
+        <header className="toolbar">
+          <div>
+            <p className="eyebrow">Skill runner</p>
+            <h2>{selectedSkill?.name || "No skills found"}</h2>
+          </div>
+          <a href={config.docs.base} rel="noreferrer" target="_blank">
+            Docs
+          </a>
+        </header>
+
+        {selectedSkill ? (
+          <form className="runner" onSubmit={runSkill}>
+            <label>
+              Arguments JSON
+              <textarea
+                spellCheck="false"
+                value={argsText}
+                onChange={(event) => setArgsText(event.target.value)}
+              />
+            </label>
+            <button disabled={running} type="submit">
+              {running ? "Running..." : `Run ${selectedSkill.name}`}
+            </button>
+          </form>
+        ) : (
+          <p className="empty">Add a `@a2a.tool` to your agent to make it callable here.</p>
+        )}
+
+        <section className="panels">
+          <div className="panel">
+            <h3>Input schema</h3>
+            <pre>{JSON.stringify(selectedSkill?.input_schema || {}, null, 2)}</pre>
+          </div>
+          <div className="panel">
+            <h3>Result</h3>
+            <pre>{error || JSON.stringify(result, null, 2) || "No run yet."}</pre>
+          </div>
+        </section>
+      </section>
+    </main>
+  );
+}

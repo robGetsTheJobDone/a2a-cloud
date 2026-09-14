@@ -1,0 +1,6 @@
+name: agent-builder
+version: 0.1.17
+entrypoint: agent:AgentBuilder
+description: Generate, test, and deploy new a2a agents from natural language.
+expose:
+  public: true

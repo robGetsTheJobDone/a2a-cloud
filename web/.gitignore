@@ -1,0 +1,17 @@
+.DS_Store
+.codex/
+.codegraph/
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+.turbo/
+.next/
+dist/
+coverage/
+*.tsbuildinfo
+.ui-self-improve/
+package-lock.json
+npm-debug.log*
+pnpm-debug.log*

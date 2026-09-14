@@ -1,0 +1,127 @@
+# {{ name }}
+
+{{ description }}
+
+This project was scaffolded with `a2a init`. It starts as a DeepAgents-backed
+A2A agent that uses the caller's saved LLM credential from `ctx.llm`.
+
+`LLMProvisioning.PLATFORM` and `LLMProvisioning.CALLER_PROVIDED` both read that
+same `ctx.llm` path. Do not read provider keys, LiteLLM master keys,
+`OPENAI_API_KEY`, or `A2A_LITELLM_KEY` directly in agent code, and do not
+substitute fake fallback API keys when `ctx.llm.api_key` is empty.
+
+## Durable Files
+
+A2A Cloud workspaces are grant-scoped and backed by MinIO. Files become durable
+when your agent uses one of the platform-owned file paths:
+
+- `ctx.workspace` for direct workspace reads and writes
+- `ctx.write_artifact(...)` for explicit output artifacts
+- `ctx.sandbox` for commands that read or write files in a sandbox
+- `ctx.workspace_backend()` for framework file tools such as DeepAgents
+
+DeepAgents has its own built-in file tools (`write_file`, `read_file`,
+`edit_file`). Without an A2A backend, those tools write into LangGraph state
+only, so files can appear to the agent but never reach MinIO or `/workspace`.
+
+Keep this line when building DeepAgents graphs:
+
+```python
+backend = ctx.workspace_backend()
+return create_a2a_deep_agent(ctx, backend=backend, tools=[...])
+```
+
+Invoke DeepAgents graphs with the starter recursion budget:
+
+```python
+state = await graph.ainvoke(
+    {"messages": [{"role": "user", "content": prompt}]},
+    config={"recursion_limit": 500},
+)
+```
+
+The backend respects the caller's grant. In handoffs, generated files should go
+through `ctx.workspace_backend()`, `ctx.write_artifact(...)`, or a sandbox helper
+so they are mirrored to the caller workspace instead of becoming private virtual
+files.
+
+For stable, human-readable paths, write intentional outputs to
+`/workspace/outputs/...` or `ctx.write_artifact(...)`. If sandboxed code writes
+to process-local paths such as `/tmp/result.csv`, `/root`, or `/app`, the
+platform captures changed rootfs files under `outputs/rootfs-captures/...` so
+the caller can still download and inspect them.
+
+When a skill needs to run real code, render media, convert files, or call a
+CLI that writes outputs, use the workspace-mounted sandbox helpers:
+
+```python
+result = await ctx.workspace_shell(
+    "python script.py --out /tmp/result.txt",
+    image="python:3.11-slim",
+    timeout_seconds=120,
+)
+```
+
+Do not rely on `asyncio.create_subprocess_exec(...)` for durable outputs. A
+plain subprocess runs in the agent container, which is not mounted to the
+caller workspace; files it creates in `/tmp` or the image filesystem can vanish
+after the request. Use the sandbox helpers for any file-producing toolchain.
+
+## DeepAgents Skills
+
+If this project grows reusable workflow knowledge, add source-controlled skill
+folders under `skills/<skill-name>/SKILL.md`. The starter's `_seed_runtime_skills`
+helper copies those packaged skills into the invocation workspace and passes the
+resulting source path to `create_a2a_deep_agent(..., skills=[...])`, which is
+how DeepAgents discovers skills with progressive disclosure.
+
+## Run Locally
+
+```bash
+python -m pip install -r requirements.txt
+a2a dev --local
+a2a test
+a2a test --invoke --skill ask --args-json '{"prompt":"hello"}'
+a2a card
+```
+
+`a2a dev --local` runs the agent in this Python process — no Docker needed. It
+loads `.env.local`, creates `.a2a/workspace/{inputs,outputs}`, serves the same
+HTTP invoke/card/MCP endpoints as production, and hot reloads local code. Files
+written through `ctx.workspace_backend()` land under `.a2a/workspace/outputs`
+before you deploy. Bare `a2a dev` instead syncs the project to a public,
+hot-reloading cloud dev box.
+
+Add `--docker` to run the agent inside its container image instead (needs a
+running Docker daemon). If you declare platform databases or vector memory,
+use `a2a chat` — that is the harness that also starts Postgres/Qdrant.
+
+## Auth
+
+The template is public by default (`auth_model = NoAuth`). To require the
+caller's app login, declare a typed auth model and resolver in `agent.py`.
+Resolvers receive the inbound bearer token and return the principal exposed as
+`ctx.auth`.
+
+Hosted browser/direct invokes that use `LLMProvisioning.PLATFORM` still need an
+A2A Cloud session so the runtime can mint a short-lived LLM/workspace grant for
+that user. Agent-to-agent handoffs pass that grant explicitly.
+
+```python
+from a2a_pack import JWTAuth, OIDCUserInfoAuthResolver
+
+auth_model = JWTAuth
+auth_resolver = OIDCUserInfoAuthResolver(
+    "https://auth.example.com/oauth2/userinfo",
+    auth_model=JWTAuth,
+)
+```
+
+For homegrown auth or SAML-backed apps, expose a bearer-token `/me` or
+`/introspect` endpoint and use the same resolver contract.
+
+## Deploy
+
+```bash
+a2a deploy
+```

@@ -1,0 +1,93 @@
+export const CONFIG_URL = import.meta.env?.DEV ? "/config.json" : "./config.json";
+
+export function unwrapInvokeResponse(payload) {
+  if (payload && typeof payload === "object" && "result" in payload) {
+    return payload.result;
+  }
+  return payload;
+}
+
+export async function requestJson(url, init = {}) {
+  const response = await fetch(url, { credentials: "same-origin", ...init });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const detail = data && (data.detail || data.message);
+    throw new Error(detail || `request failed: ${response.status}`);
+  }
+  return data;
+}
+
+export async function loadAgentConfig() {
+  return requestJson(CONFIG_URL);
+}
+
+export async function loadSession(config) {
+  return requestJson(config.endpoints.session);
+}
+
+export function signInUrl(config) {
+  // Always prefer authorizeUrl. The dashboard's login cookie is host-locked to
+  // the dashboard's own origin, so sending the browser straight to loginUrl
+  // signs the user in *there* and bounces back here still signed out.
+  // authorizeUrl hands this origin a code it trades for its own session.
+  const target = config.auth?.authorizeUrl || config.auth?.loginUrl;
+  if (!target) return null;
+  const next = encodeURIComponent(
+    window.location.pathname + window.location.search + window.location.hash,
+  );
+  return `${target}${target.includes("?") ? "&" : "?"}next=${next}`;
+}
+
+export async function requireSession(config) {
+  const session = await loadSession(config);
+  if (!session?.authenticated) {
+    const target = signInUrl(config);
+    if (target) window.location.assign(target);
+    throw new Error("sign in required");
+  }
+  return session;
+}
+
+export async function callSkill(config, skillName, args) {
+  if (config.auth?.invokeRequiresSession) {
+    await requireSession(config);
+  }
+  const payload = await requestJson(
+    `${config.endpoints.invoke}/${encodeURIComponent(skillName)}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ arguments: args }),
+    },
+  );
+  return unwrapInvokeResponse(payload);
+}
+
+export function sampleValue(schema) {
+  if (!schema || typeof schema !== "object") return null;
+  if ("default" in schema) return schema.default;
+  if ("const" in schema) return schema.const;
+  if (Array.isArray(schema.enum) && schema.enum.length) return schema.enum[0];
+  const type = Array.isArray(schema.type)
+    ? schema.type.find((item) => item !== "null") || schema.type[0]
+    : schema.type;
+  if (type === "array") return [];
+  if (type === "boolean") return false;
+  if (type === "integer" || type === "number") return 0;
+  if (type === "string") return "";
+  const props = schema.properties || {};
+  if (type === "object" || Object.keys(props).length) {
+    const required = Array.isArray(schema.required) ? schema.required : Object.keys(props);
+    return Object.fromEntries(
+      required.map((key) => [key, sampleValue(props[key])]),
+    );
+  }
+  return null;
+}
+
+export function sampleArgs(skill) {
+  const schema = skill?.input_schema || skill?.inputSchema || {};
+  const value = sampleValue(schema);
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}

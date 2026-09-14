@@ -1,0 +1,23 @@
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+
+const candidates = [
+  ".next/standalone/server.js",
+  ".next/standalone/frontend/server.js",
+];
+const server = candidates.find((path) => existsSync(path));
+
+if (!server) {
+  throw new Error("Next standalone server.js not found; run npm run build first");
+}
+
+const result = spawnSync(process.execPath, [server], {
+  stdio: "inherit",
+  env: {
+    ...process.env,
+    HOSTNAME: process.env.HOSTNAME || "127.0.0.1",
+    PORT: process.env.PORT || "3000",
+  },
+});
+
+process.exit(result.status ?? 1);

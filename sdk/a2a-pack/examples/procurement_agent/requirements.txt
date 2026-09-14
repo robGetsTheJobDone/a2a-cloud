@@ -1,0 +1,4 @@
+a2a-pack
+pypdf>=5.0
+psycopg[binary]>=3.2
+
